@@ -14,6 +14,8 @@ export async function GET() {
     RESEND_API_KEY: features.email,
     EMAIL_FROM: Boolean(process.env.EMAIL_FROM),
     CRON_SECRET: Boolean(env.cronSecret),
+    NEXT_PUBLIC_VAPID_PUBLIC_KEY: Boolean(env.vapidPublicKey),
+    VAPID_PRIVATE_KEY: Boolean(env.vapidPrivateKey),
   };
   let database: string = "not checked";
   if (settings.NEXT_PUBLIC_SUPABASE_URL && settings.SUPABASE_SERVICE_ROLE_KEY) {
