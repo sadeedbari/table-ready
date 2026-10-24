@@ -18,3 +18,7 @@ Without `RESEND_API_KEY`, emails are printed to the server log instead of sent.
 ## End-to-end tests
 
 `npx playwright test` starts the app on port 3200, seeds a test restaurant ("E2E Bistro") with `e2e/seed.ts`, and removes it afterwards (`npx tsx e2e/cleanup.ts` removes it by hand). The tests use the installed Chrome and the same Supabase project as the app, and only touch rows tagged `e2e-` / `@tableready-e2e.test`.
+
+## Walk-in queue
+
+`/o/<slug>/queue` is the host's line: add a party (name, size, phone, optional email, quoted wait), mark "Table ready" (emails the party when an email was saved; Call and Text buttons use `tel:` / `sms:` links with the message pre-written, so no texting service is needed), then Seated or Left. Guests can join from `/<slug>/queue` (a QR code is shown on the host page) when the owner turns that on, and watch their place at `/queue/<token>`. Apply `supabase/migrations/20261025000000_walkin_queue.sql` before using it.

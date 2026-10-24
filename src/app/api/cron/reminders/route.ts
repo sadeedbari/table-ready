@@ -31,6 +31,8 @@ export async function GET(request: NextRequest) {
     await sendReminder(r, row);
     reminded++;
   }
+  // Anyone still marked in line after 18 hours is long gone: close those entries.
+  await db.from("walkins").update({ status: "cancelled", closed_at: new Date().toISOString() }).in("status", ["waiting", "ready"]).lt("joined_at", new Date(now - 18 * 3600_000).toISOString());
   const { data: restaurants } = await db.from("restaurants").select("*");
   for (const r of (restaurants ?? []) as Restaurant[]) {
     await expireWaitlist(r);

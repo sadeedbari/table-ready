@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 
 const ITEMS = [
   { href: "", label: "Today" },
+  { href: "/queue", label: "Walk-ins" },
   { href: "/tables", label: "Tables" },
   { href: "/hours", label: "Hours & rules" },
   { href: "/waitlist", label: "Waitlist" },

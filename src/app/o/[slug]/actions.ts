@@ -6,10 +6,12 @@ import { createClient } from "@/lib/supabase/server";
 import { friendlyDbError } from "@/lib/db-errors";
 import { instantAt, toMinutes } from "@/lib/hours";
 import { bookTable, cancelReservation, flushWaitlist } from "@/lib/reservations";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { sendWalkinJoined, sendWalkinReady } from "@/lib/emails";
 import { normalizePhone } from "@/lib/phone";
 import { friendlyZodMessage as zodMessage } from "@/lib/zod-message";
 import type { ActionResult } from "@/components/ui/action-form";
-import type { Reservation, ReservationStatus } from "@/lib/types";
+import type { Reservation, ReservationStatus, Walkin, WalkinStatus } from "@/lib/types";
 
 const refresh = (slug: string) => revalidatePath(`/o/${slug}`, "layout");
 const NOT_ALLOWED: ActionResult = { error: "Only an owner or admin can change this." };
@@ -221,4 +223,67 @@ export async function checkWaitlist(slug: string): Promise<ActionResult> {
   const n = await flushWaitlist(restaurant);
   refresh(slug);
   return { message: n ? `${n} ${n === 1 ? "guest was" : "guests were"} told a table is open` : "No open tables match anyone waiting right now" };
+}
+
+// ─────────────── Walk-in queue (any team member) ───────────────
+
+const walkinSchema = z.object({
+  name: z.string().trim().min(1, "Enter the guest's name.").max(120),
+  party: z.coerce.number().int().min(1, "Enter how many guests.").max(50),
+  phone: z.string().trim().max(40),
+  email: z.union([z.literal(""), z.email("That email does not look right.")]),
+  notes: z.string().trim().max(300),
+  quoted: z.union([z.literal(""), z.coerce.number().int().min(0).max(600)]),
+});
+
+export async function addWalkin(slug: string, fd: FormData): Promise<ActionResult> {
+  const { restaurant } = await getRestaurantContext(slug);
+  const parsed = walkinSchema.safeParse(Object.fromEntries(fd));
+  if (!parsed.success) return { error: zodMessage(parsed.error) };
+  const v = parsed.data;
+  const db = createAdminClient();
+  const { data, error } = await db.from("walkins").insert({
+    restaurant_id: restaurant.id,
+    guest_name: v.name,
+    party_size: v.party,
+    phone: v.phone ? (normalizePhone(v.phone, "CAD") ?? v.phone) : null,
+    email: v.email ? v.email.toLowerCase() : null,
+    notes: v.notes || null,
+    quoted_minutes: v.quoted === "" ? null : v.quoted,
+    source: "host",
+  }).select("*").single();
+  if (error || !data) return { error: friendlyDbError(error) ?? "Something went wrong. Please try again." };
+  void sendWalkinJoined(restaurant, data as Walkin);
+  refresh(slug);
+  return { message: `${v.name} added to the line` };
+}
+
+const WALKIN_STATUSES: WalkinStatus[] = ["waiting", "ready", "seated", "cancelled"];
+
+export async function setWalkinStatus(slug: string, id: string, status: WalkinStatus): Promise<ActionResult> {
+  const { restaurant } = await getRestaurantContext(slug);
+  if (!WALKIN_STATUSES.includes(status)) return { error: "Unknown status." };
+  const supabase = await createClient();
+  const { data: w } = await supabase.from("walkins").select("*").eq("id", id).eq("restaurant_id", restaurant.id).maybeSingle();
+  if (!w) return { error: "That party is no longer in the list." };
+  const now = new Date().toISOString();
+  const patch =
+    status === "ready" ? { status, ready_at: now, closed_at: null }
+    : status === "waiting" ? { status, ready_at: null, closed_at: null }
+    : { status, closed_at: now };
+  const { error } = await supabase.from("walkins").update(patch).eq("id", id);
+  if (error) return { error: friendlyDbError(error) };
+  if (status === "ready" && w.status !== "ready") void sendWalkinReady(restaurant, w as Walkin);
+  refresh(slug);
+  if (status === "ready") return { message: w.email ? "Marked ready and emailed" : "Marked ready" };
+}
+
+export async function setQueueOpen(slug: string, fd: FormData): Promise<ActionResult> {
+  const { restaurant, isAdmin } = await getRestaurantContext(slug);
+  if (!isAdmin) return NOT_ALLOWED;
+  const supabase = await createClient();
+  const { error } = await supabase.from("restaurants").update({ queue_open: fd.get("queue_open") === "on" }).eq("id", restaurant.id);
+  if (error) return { error: friendlyDbError(error) };
+  refresh(slug);
+  return { message: "Saved" };
 }

@@ -2,7 +2,7 @@ import "server-only";
 import { Resend } from "resend";
 import { env, features } from "@/lib/env";
 import { formatDate, formatTime } from "@/lib/format";
-import type { Reservation, Restaurant, WaitlistEntry } from "@/lib/types";
+import type { Reservation, Restaurant, WaitlistEntry, Walkin } from "@/lib/types";
 
 function esc(s: string) {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
@@ -73,5 +73,28 @@ export async function sendWaitlistOpening(r: Pick<Restaurant, "name" | "slug" | 
     subject: `A table opened up at ${r.name}`,
     html: shell("A table just opened", `<p style="margin:0 0 12px">${esc(w.guest_name)}, a table for ${party(w.party_size)} is now available at <strong>${esc(r.name)}</strong> on ${esc(formatDate(w.wanted_date + "T12:00:00Z", "UTC"))}. Tables go quickly, so book soon.</p>`, { href: url, label: "Pick a time" }),
     text: `A table for ${party(w.party_size)} opened at ${r.name} on ${w.wanted_date}. Book: ${url}`,
+  });
+}
+
+export const queueUrl = (token: string) => `${env.appUrl}/queue/${token}`;
+
+export async function sendWalkinJoined(r: Pick<Restaurant, "name" | "phone">, w: Pick<Walkin, "guest_name" | "email" | "party_size" | "quoted_minutes" | "token">) {
+  if (!w.email) return;
+  const quote = w.quoted_minutes ? ` The wait is about ${w.quoted_minutes} minutes.` : "";
+  await sendEmail({
+    to: w.email,
+    subject: `You're in line at ${r.name}`,
+    html: shell("You're in line", `<p style="margin:0 0 12px">${esc(w.guest_name)}, we have a spot in line for ${party(w.party_size)} at <strong>${esc(r.name)}</strong>.${esc(quote)} We will email you the moment your table is ready.</p><p style="margin:0">You can watch your place in line here.</p>`, { href: queueUrl(w.token), label: "See my place in line" }),
+    text: `You're in line at ${r.name} for ${party(w.party_size)}.${quote} Watch your place: ${queueUrl(w.token)}`,
+  });
+}
+
+export async function sendWalkinReady(r: Pick<Restaurant, "name" | "phone">, w: Pick<Walkin, "guest_name" | "email" | "party_size" | "token">) {
+  if (!w.email) return;
+  await sendEmail({
+    to: w.email,
+    subject: `Your table is ready at ${r.name}`,
+    html: shell("Your table is ready", `<p style="margin:0 0 12px">${esc(w.guest_name)}, your table for ${party(w.party_size)} is ready at <strong>${esc(r.name)}</strong>. Please check in with the host.</p>${r.phone ? `<p style="margin:0">Running late? Call ${esc(r.phone)}.</p>` : ""}`, { href: queueUrl(w.token), label: "View status" }),
+    text: `Your table for ${party(w.party_size)} is ready at ${r.name}. Please check in with the host.`,
   });
 }

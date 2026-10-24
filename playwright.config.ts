@@ -9,6 +9,8 @@ for (const line of fs.readFileSync(".env.local", "utf8").split(/\r?\n/)) {
 
 // End-to-end tests run against a local app on port 3200 and tagged test data made by e2e/seed.ts.
 // They use the installed Chrome, so no browser download is needed. Emails are printed to the server log (no Resend key locally).
+const live = process.env.E2E_BASE_URL; // set to test a deployed site instead of starting the app locally
+
 export default defineConfig({
   testDir: "./e2e/specs",
   timeout: 90_000,
@@ -17,7 +19,7 @@ export default defineConfig({
   fullyParallel: false,
   retries: 0,
   reporter: [["list"]],
-  webServer: {
+  webServer: live ? undefined : {
     command: "npx next dev -p 3200",
     url: "http://localhost:3200",
     reuseExistingServer: true,
@@ -25,7 +27,7 @@ export default defineConfig({
     env: { NEXT_PUBLIC_APP_URL: "http://localhost:3200", RESEND_API_KEY: "" },
   },
   use: {
-    baseURL: "http://localhost:3200",
+    baseURL: live ?? "http://localhost:3200",
     channel: "chrome",
     headless: true,
     viewport: { width: 1280, height: 900 },

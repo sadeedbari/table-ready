@@ -22,7 +22,7 @@ export function initials(name: string) {
 
 /** Slugs that can't be used for restaurants because they collide with app routes. */
 export const RESERVED_SLUGS = new Set([
-  "api", "app", "o", "login", "signup", "logout", "auth", "onboarding", "invite", "booking", "reservation", "reserve",
+  "api", "app", "o", "login", "signup", "logout", "auth", "onboarding", "invite", "booking", "reservation", "reserve", "queue", "line", "walkin",
   "settings", "admin", "dashboard", "waitlist", "sms", "help", "support", "pricing", "about", "terms", "privacy",
   "blog", "docs", "preview", "static", "_next", "favicon", "tableready", "www", "mail", "embed",
   "forgot", "reset", "sitemap", "robots", "manifest", "icon", "icons", "opengraph-image", "twitter-image",

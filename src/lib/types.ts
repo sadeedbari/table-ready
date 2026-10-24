@@ -1,5 +1,6 @@
 export type Role = "owner" | "admin" | "member";
 export type ReservationStatus = "confirmed" | "seated" | "completed" | "cancelled" | "no_show";
+export type WalkinStatus = "waiting" | "ready" | "seated" | "cancelled";
 export type WaitlistStatus = "waiting" | "notified" | "booked" | "cancelled" | "expired";
 
 export interface TurnRule { upTo: number; minutes: number }
@@ -14,6 +15,7 @@ export interface Restaurant {
   phone: string | null;
   website: string | null;
   online_enabled: boolean;
+  queue_open: boolean;
   min_notice_minutes: number;
   max_advance_days: number;
   slot_interval_minutes: number;
@@ -78,4 +80,21 @@ export interface WaitlistEntry {
   token: string;
   notified_at: string | null;
   created_at: string;
+}
+
+export interface Walkin {
+  id: string;
+  restaurant_id: string;
+  guest_name: string;
+  party_size: number;
+  phone: string | null;
+  email: string | null;
+  notes: string | null;
+  quoted_minutes: number | null;
+  status: WalkinStatus;
+  source: "host" | "online";
+  token: string;
+  joined_at: string;
+  ready_at: string | null;
+  closed_at: string | null;
 }
