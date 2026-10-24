@@ -34,11 +34,11 @@ export function PeriodEditor({ slug, period, disabled }: { slug: string; period:
         size="sm"
         footer={disabled ? undefined : <ActionButton action={() => deletePeriod(slug, period.id)} variant="destructive" confirm={`Remove ${period.name}?`}>Remove</ActionButton>}
       >
-        <div className="flex flex-wrap items-end gap-x-4 gap-y-3">
-          <Field label="Name" className="w-40"><Input name="name" defaultValue={period.name} required maxLength={40} disabled={disabled} /></Field>
-          <Field label="Opens"><Input name="opens" type="time" defaultValue={period.opens.slice(0, 5)} required disabled={disabled} /></Field>
-          <Field label="Last seating"><Input name="last_seating" type="time" defaultValue={period.last_seating.slice(0, 5)} required disabled={disabled} /></Field>
-          <div className="flex items-center gap-2 pb-2.5"><Switch name="active" defaultChecked={period.active} label="Active" disabled={disabled} /><span className="text-[14px]">Active</span></div>
+        <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end sm:gap-x-4">
+          <Field label="Name" className="col-span-2 sm:w-40"><Input name="name" defaultValue={period.name} required maxLength={40} disabled={disabled} /></Field>
+          <Field label="Opens" className="min-w-0"><Input name="opens" type="time" defaultValue={period.opens.slice(0, 5)} required disabled={disabled} /></Field>
+          <Field label="Last seating" className="min-w-0"><Input name="last_seating" type="time" defaultValue={period.last_seating.slice(0, 5)} required disabled={disabled} /></Field>
+          <div className="col-span-2 flex items-center gap-2 sm:col-span-1 sm:pb-2.5"><Switch name="active" defaultChecked={period.active} label="Active" disabled={disabled} /><span className="text-[14px]">Active</span></div>
         </div>
         <DayPicker selected={period.days} disabled={disabled} />
       </ActionForm>
@@ -51,10 +51,10 @@ export function NewPeriod({ slug }: { slug: string }) {
     <Card className="mt-4 !p-4">
       <h3 className="mb-3 text-[17px]">Add a service</h3>
       <ActionForm action={savePeriod.bind(null, slug, null)} submit="Add service" resetOnSuccess size="sm">
-        <div className="flex flex-wrap items-end gap-x-4 gap-y-3">
-          <Field label="Name" className="w-40"><Input name="name" required maxLength={40} placeholder="Lunch" /></Field>
-          <Field label="Opens"><Input name="opens" type="time" defaultValue="11:30" required /></Field>
-          <Field label="Last seating"><Input name="last_seating" type="time" defaultValue="14:00" required /></Field>
+        <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end sm:gap-x-4">
+          <Field label="Name" className="col-span-2 sm:w-40"><Input name="name" required maxLength={40} placeholder="Lunch" /></Field>
+          <Field label="Opens" className="min-w-0"><Input name="opens" type="time" defaultValue="11:30" required /></Field>
+          <Field label="Last seating" className="min-w-0"><Input name="last_seating" type="time" defaultValue="14:00" required /></Field>
         </div>
         <DayPicker selected={[1, 2, 3, 4, 5]} />
       </ActionForm>
@@ -76,9 +76,9 @@ export function ClosureList({ slug, closures, disabled }: { slug: string; closur
         </ul>
       )}
       {!disabled && (
-        <ActionForm action={addClosure.bind(null, slug)} submit="Mark closed" resetOnSuccess size="sm" className="flex flex-wrap items-end gap-x-4 gap-y-3 space-y-0">
-          <Field label="Date"><Input name="on_date" type="date" required /></Field>
-          <Field label="Note (optional)" className="w-56"><Input name="note" maxLength={80} placeholder="Private event" /></Field>
+        <ActionForm action={addClosure.bind(null, slug)} submit="Mark closed" resetOnSuccess size="sm" className="grid grid-cols-1 gap-3 space-y-0 sm:flex sm:flex-wrap sm:items-end sm:gap-x-4">
+          <Field label="Date" className="min-w-0"><Input name="on_date" type="date" required /></Field>
+          <Field label="Note (optional)" className="min-w-0 sm:w-56"><Input name="note" maxLength={80} placeholder="Private event" /></Field>
         </ActionForm>
       )}
       {disabled && closures.length === 0 && <p className="text-[14px] text-label-2">No closures.</p>}

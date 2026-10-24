@@ -215,6 +215,10 @@
     outline: none;
     box-shadow: var(--ring);
   }
+  input[type="date"], input[type="time"] {
+    min-width: 0;
+    max-width: 100%;
+  }
   button {
     cursor: pointer;
   }

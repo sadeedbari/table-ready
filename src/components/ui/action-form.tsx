@@ -23,6 +23,7 @@ export function ActionForm({
   onDone,
   resetOnSuccess,
   footer,
+  footerClassName,
 }: {
   action: (fd: FormData) => Promise<ActionResult>;
   children?: ReactNode;
@@ -33,6 +34,7 @@ export function ActionForm({
   onDone?: () => void;
   resetOnSuccess?: boolean;
   footer?: ReactNode;
+  footerClassName?: string;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useSafeTransition(setError);
@@ -57,9 +59,9 @@ export function ActionForm({
       }}
     >
       {children}
-      {error && <Notice tone="red">{error}</Notice>}
+      {error && <div className="col-span-full"><Notice tone="red">{error}</Notice></div>}
       {(submit || footer) && (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className={cn("flex flex-wrap items-center gap-2", footerClassName)}>
           {submit && <Button type="submit" variant={variant} size={size} loading={pending}>{submit}</Button>}
           {footer}
         </div>

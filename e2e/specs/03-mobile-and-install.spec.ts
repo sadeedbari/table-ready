@@ -42,7 +42,20 @@ async function audit(page: Page) {
       .filter((e) => visible(e) && !e.closest("[aria-hidden=true]") && e.getAttribute("role") !== "switch" && !e.closest("p, li"))
       .map((e) => ({ text: (e.textContent || e.getAttribute("aria-label") || "").trim().slice(0, 24), h: Math.round(e.getBoundingClientRect().height), w: Math.round(e.getBoundingClientRect().width) }))
       .filter((x) => x.h > 0 && x.w > 0 && (x.h < 32 || (x.w < 32 && x.text.length > 0)));
-    return { overflow: doc.scrollWidth - doc.clientWidth, fields, tiny };
+    // Form controls drawn on top of each other (a layout that only breaks on a narrow screen).
+    const controls = [...document.querySelectorAll<HTMLElement>("input:not([type=hidden]), select, textarea, button[role=switch]")]
+      .filter((e) => visible(e) && e.getBoundingClientRect().width > 4 && e.getBoundingClientRect().height > 4);
+    const overlaps: string[] = [];
+    for (let i = 0; i < controls.length; i++) {
+      for (let j = i + 1; j < controls.length; j++) {
+        const a = controls[i].getBoundingClientRect();
+        const b = controls[j].getBoundingClientRect();
+        if (a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1) {
+          overlaps.push(`${controls[i].getAttribute("name") || controls[i].getAttribute("aria-label")} over ${controls[j].getAttribute("name") || controls[j].getAttribute("aria-label")}`);
+        }
+      }
+    }
+    return { overflow: doc.scrollWidth - doc.clientWidth, fields, tiny, overlaps };
   });
 }
 
@@ -93,6 +106,7 @@ test("the restaurant's screens fit a 375px phone", async ({ page }) => {
     if (a.overflow > 1) problems.push(`${path || "/"}: scrolls sideways by ${a.overflow}px`);
     if (a.fields.length) problems.push(`${path || "/"}: fields under 16px: ${a.fields.join(", ")}`);
     if (a.tiny.length) problems.push(`${path || "/"}: small tap targets: ${a.tiny.map((t) => `${t.text} ${t.w}x${t.h}`).join("; ")}`);
+    if (a.overlaps.length) problems.push(`${path || "/"}: controls overlap: ${a.overlaps.join("; ")}`);
   }
   expect(problems, problems.join("\n")).toEqual([]);
 });
