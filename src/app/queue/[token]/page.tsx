@@ -6,6 +6,8 @@ import { Card } from "@/components/ui/misc";
 import { Logo } from "@/components/app/logo";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { minutesLeft, partiesAhead } from "@/lib/queue";
+import { activeNotices } from "@/lib/notices-server";
+import { NoticeBanner } from "@/components/app/notice-banner";
 import { LeaveButton, StatusPoller } from "./status-client";
 import type { Restaurant, Walkin } from "@/lib/types";
 
@@ -29,10 +31,12 @@ export default async function QueueStatusPage(props: PageProps<"/queue/[token]">
   const { data: open } = await db.from("walkins").select("id, status, joined_at").eq("restaurant_id", r.id).in("status", ["waiting", "ready"]);
   const { ahead, left } = standing(w, open ?? []);
   const live = w.status === "waiting" || w.status === "ready";
+  const notices = live ? await activeNotices(r.id, "queue") : [];
 
   return (
     <main className="mx-auto max-w-md px-4 py-12">
       {live && <StatusPoller />}
+      {notices.length > 0 && <div className="mb-4"><NoticeBanner notices={notices} timeZone={r.timezone} /></div>}
       <Card className="!p-7 text-center">
         <p className="text-[15px] font-medium text-label-2">{r.name}</p>
         {w.status === "ready" && (

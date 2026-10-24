@@ -6,6 +6,7 @@ import { getRestaurantContext } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { friendlyDbError } from "@/lib/db-errors";
 import { instantAt, toMinutes } from "@/lib/hours";
+import { parseLocalInput } from "@/lib/notices";
 import { bookTable, cancelReservation, flushWaitlist } from "@/lib/reservations";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendWalkinJoined, sendWalkinReady } from "@/lib/emails";
@@ -297,4 +298,56 @@ export async function saveNotificationSettings(slug: string, fd: FormData): Prom
   if (error) return { error: friendlyDbError(error) };
   refresh(slug);
   return { message: "Notification settings saved" };
+}
+
+// ─────────────── Guest notices (any team member) ───────────────
+
+const noticeSchema = z.object({
+  message: z.string().trim().min(1, "Write the message guests will see.").max(300, "Keep the message to 300 characters or fewer."),
+  starts: z.string(),
+  ends: z.string().min(1, "Choose when the notice should end."),
+});
+
+export async function addNotice(slug: string, fd: FormData): Promise<ActionResult> {
+  const { restaurant, me } = await getRestaurantContext(slug);
+  const parsed = noticeSchema.safeParse(Object.fromEntries(fd));
+  if (!parsed.success) return { error: zodMessage(parsed.error) };
+  const showReservations = fd.get("show_reservations") === "on";
+  const showQueue = fd.get("show_queue") === "on";
+  if (!showReservations && !showQueue) return { error: "Choose where guests should see it." };
+  const now = Date.now();
+  const startsAt = parsed.data.starts ? parseLocalInput(parsed.data.starts, restaurant.timezone) : new Date(now).toISOString();
+  const endsAt = parseLocalInput(parsed.data.ends, restaurant.timezone);
+  if (!startsAt) return { error: "That start time does not look right." };
+  if (!endsAt) return { error: "That end time does not look right." };
+  if (new Date(endsAt).getTime() <= now) return { error: "The end time has already passed. Choose a later time." };
+  if (new Date(endsAt).getTime() <= new Date(startsAt).getTime()) return { error: "The notice has to end after it starts." };
+  const supabase = await createClient();
+  const { error } = await supabase.from("guest_notices").insert({
+    restaurant_id: restaurant.id, message: parsed.data.message, starts_at: startsAt, ends_at: endsAt,
+    show_reservations: showReservations, show_queue: showQueue, created_by: me.user_id,
+  });
+  if (error) return { error: friendlyDbError(error) };
+  refresh(slug);
+  revalidatePath(`/${slug}`);
+  return { message: new Date(startsAt).getTime() <= now ? "Notice is showing to guests" : "Notice scheduled" };
+}
+
+export async function endNotice(slug: string, id: string): Promise<ActionResult> {
+  const { restaurant } = await getRestaurantContext(slug);
+  const supabase = await createClient();
+  const { error } = await supabase.from("guest_notices").update({ ends_at: new Date().toISOString() }).eq("id", id).eq("restaurant_id", restaurant.id);
+  if (error) return { error: friendlyDbError(error) };
+  refresh(slug);
+  revalidatePath(`/${slug}`);
+  return { message: "Notice ended" };
+}
+
+export async function deleteNotice(slug: string, id: string): Promise<ActionResult> {
+  const { restaurant } = await getRestaurantContext(slug);
+  const supabase = await createClient();
+  const { error } = await supabase.from("guest_notices").delete().eq("id", id).eq("restaurant_id", restaurant.id);
+  if (error) return { error: friendlyDbError(error) };
+  refresh(slug);
+  revalidatePath(`/${slug}`);
 }

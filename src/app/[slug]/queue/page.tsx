@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { loadRestaurantData } from "@/lib/reservations";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { openQueue } from "@/lib/queue";
+import { activeNotices } from "@/lib/notices-server";
+import { NoticeBanner } from "@/components/app/notice-banner";
 import { JoinForm } from "./join-form";
 
 export const metadata: Metadata = { title: "Join the line", robots: { index: false, follow: false } };
@@ -13,6 +15,7 @@ export default async function JoinQueuePage(props: PageProps<"/[slug]/queue">) {
   const data = await loadRestaurantData(slug);
   if (!data) notFound();
   const r = data.restaurant;
+  const notices = await activeNotices(r.id, "queue");
   let ahead = 0;
   if (r.queue_open) {
     const { data: rows } = await createAdminClient().from("walkins").select("id, status, joined_at").eq("restaurant_id", r.id).in("status", ["waiting", "ready"]);
@@ -24,6 +27,7 @@ export default async function JoinQueuePage(props: PageProps<"/[slug]/queue">) {
         <h1 className="text-[32px] leading-tight sm:text-[40px]">{r.name}</h1>
         <p className="mt-2 text-[16px] text-label-2">Join the line and we will tell you when your table is ready.</p>
       </header>
+      <div className="mb-4"><NoticeBanner notices={notices} timeZone={r.timezone} /></div>
       <section className="rounded-[24px] bg-surface p-5 shadow-md hairline sm:p-7">
         {r.queue_open ? (
           <>

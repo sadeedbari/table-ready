@@ -7,6 +7,8 @@ import { Notice } from "@/components/ui/misc";
 import { addDaysToKey, formatDate, formatTime, todayKey } from "@/lib/format";
 import { openDays } from "@/lib/hours";
 import { loadRestaurantData, slotsFor } from "@/lib/reservations";
+import { activeNotices } from "@/lib/notices-server";
+import { NoticeBanner } from "@/components/app/notice-banner";
 import { SITE_NAME } from "@/lib/site";
 import { DetailsForm, Picker, WaitlistForm } from "./reserve-client";
 
@@ -41,6 +43,7 @@ export default async function ReservePage(props: PageProps<"/[slug]">) {
   const chosen = slots.find((s) => s.startsAt === one("time"));
   const dayLabel = (key: string, long = false) => formatDate(`${key}T12:00:00Z`, "UTC", long ? { weekday: "long", month: "long", day: "numeric" } : { weekday: "short", month: "short", day: "numeric" });
   const today = todayKey(r.timezone);
+  const notices = await activeNotices(r.id, "reservations");
 
   return (
     <main className="mx-auto max-w-2xl px-4 pb-20">
@@ -52,6 +55,8 @@ export default async function ReservePage(props: PageProps<"/[slug]">) {
           {r.phone && <a href={`tel:${r.phone}`} className="inline-flex items-center gap-1.5 underline"><Phone className="size-4" aria-hidden />{r.phone}</a>}
         </div>
       </header>
+
+      <div className="mb-4"><NoticeBanner notices={notices} timeZone={r.timezone} /></div>
 
       {one("waitlisted") && <div className="mb-4"><Notice tone="green" live>You are on the waitlist. We will email you the moment a table opens up.</Notice></div>}
 

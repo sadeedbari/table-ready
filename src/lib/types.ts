@@ -100,3 +100,14 @@ export interface Walkin {
   ready_at: string | null;
   closed_at: string | null;
 }
+
+export interface GuestNotice {
+  id: string;
+  restaurant_id: string;
+  message: string;
+  starts_at: string;
+  ends_at: string;
+  show_reservations: boolean;
+  show_queue: boolean;
+  created_at: string;
+}

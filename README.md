@@ -30,3 +30,7 @@ The site is an installable app (manifest, icons, service worker): on Android the
 ## Sign-up and password emails
 
 Supabase Auth sends these through Resend (Authentication > Emails > SMTP Settings: host `smtp.resend.com`, port 465, username `resend`, password = the Resend API key, sender `reservations@tableready.sulosystems.com`, name "Table Ready"). The branded templates live in `supabase/email-templates/` (`node scripts/build-email-templates.mjs` rebuilds them; subjects are in `subjects.json`). Paste each into Authentication > Emails > Templates. Links go to `/auth/confirm?token_hash=...`, which asks the person to press Continue so mail scanners can't use up the link. Site URL must be `https://tableready.sulosystems.com`.
+
+## Guest notices
+
+Settings > Guest notice lets any team member post a short message (for example "The kitchen is backed up") with a start and end time in the restaurant's time zone. It shows at the top of the reservation page (which holds the waitlist) and the walk-in line pages while it is active, and disappears by itself at the end time or when someone presses "End now". Staff see what guests currently see at the top of the dashboard. Apply `supabase/migrations/20261027000000_guest_notices.sql` first.
