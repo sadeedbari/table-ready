@@ -26,7 +26,7 @@ export default async function WaitlistPage(props: PageProps<"/o/[slug]/waitlist"
       <PageHeader
         title="Waitlist"
         subtitle="Guests who wanted a time that was full. When a table opens, they are emailed automatically."
-        actions={<ActionButton action={() => checkWaitlist(slug)} variant="tinted" size="md">Check for openings</ActionButton>}
+        actions={<ActionButton action={checkWaitlist.bind(null, slug)} variant="tinted" size="md">Check for openings</ActionButton>}
       />
       {entries.length === 0 ? (
         <EmptyState title="Nobody is waiting" body="When a guest asks for a day with no free times, they can join the waitlist from your public page." />
@@ -42,7 +42,7 @@ export default async function WaitlistPage(props: PageProps<"/o/[slug]/waitlist"
                   </div>
                   <div className="mt-0.5 text-[14px] text-label-2">{w.email}{w.phone ? ` · ${w.phone}` : ""}</div>
                 </div>
-                <ActionButton action={() => removeWaitlistEntry(slug, w.id)} variant="plain">Remove</ActionButton>
+                <ActionButton action={removeWaitlistEntry.bind(null, slug, w.id)} variant="plain">Remove</ActionButton>
               </Card>
             </li>
           ))}

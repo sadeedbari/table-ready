@@ -14,3 +14,7 @@ Reservations and a waitlist for restaurants. Next.js 16 (App Router), Supabase (
 4. `npm run dev`, then `npm test` (unit tests) and `npm run typecheck`.
 
 Without `RESEND_API_KEY`, emails are printed to the server log instead of sent.
+
+## End-to-end tests
+
+`npx playwright test` starts the app on port 3200, seeds a test restaurant ("E2E Bistro") with `e2e/seed.ts`, and removes it afterwards (`npx tsx e2e/cleanup.ts` removes it by hand). The tests use the installed Chrome and the same Supabase project as the app, and only touch rows tagged `e2e-` / `@tableready-e2e.test`.
