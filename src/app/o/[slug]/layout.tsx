@@ -3,6 +3,7 @@ import { ExternalLink } from "lucide-react";
 import { Logo } from "@/components/app/logo";
 import { InstallBanner } from "@/components/app/pwa";
 import { PushBanner } from "@/components/app/push-device";
+import { PublicPageLink } from "@/components/app/public-page-link";
 import { env } from "@/lib/env";
 import { NoticeBanner } from "@/components/app/notice-banner";
 import { activeNotices } from "@/lib/notices-server";
@@ -27,9 +28,9 @@ export default async function DashboardLayout(props: LayoutProps<"/o/[slug]">) {
             <span className="text-[17px] font-semibold" style={{ fontFamily: "var(--font-display)" }}>{restaurant.name}</span>
           </Link>
           <div className="flex items-center gap-1">
-            <Link href={`/${slug}`} target="_blank" className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-[13px] font-medium text-accent-text hover:bg-accent-soft">
+            <PublicPageLink href={`/${slug}`} className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-[13px] font-medium text-accent-text hover:bg-accent-soft">
               Public page <ExternalLink className="size-3.5" aria-hidden />
-            </Link>
+            </PublicPageLink>
           </div>
         </div>
         <DashNav slug={slug} />

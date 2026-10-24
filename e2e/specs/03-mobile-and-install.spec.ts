@@ -169,3 +169,33 @@ test("Sign out lives at the bottom of Settings, not in the top bar, and it signs
   await page.goto(`/o/${SLUG}`);
   await expect(page).toHaveURL(/\/login/);
 });
+
+test("'Public page' opens a new tab in a browser, but is taken over for the phone's own browser when clicked from the installed app", async ({ browser }) => {
+  const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1";
+  const ANDROID = "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36";
+  /** Opens the dashboard as a phone (installed or not) and says whether the app cancelled the link's own new-tab behaviour. */
+  async function takenOver(userAgent: string, installed: boolean) {
+    const ctx = await browser.newContext({ userAgent, viewport: { width: 390, height: 800 }, isMobile: true, hasTouch: true });
+    await ctx.addInitScript((standalone: boolean) => {
+      if (standalone) {
+        const original = window.matchMedia.bind(window);
+        window.matchMedia = (q: string) => (q.includes("display-mode: standalone") ? ({ ...original(q), matches: true } as MediaQueryList) : original(q));
+      }
+      // runs after the app's own click handler, so it sees whether the app cancelled the link
+      window.addEventListener("click", (e) => { (window as unknown as { __cancelled: boolean }).__cancelled = e.defaultPrevented; });
+    }, installed);
+    const page = await ctx.newPage();
+    await signIn(page);
+    const link = page.getByRole("link", { name: /Public page/ });
+    await expect(link).toHaveAttribute("href", `/${SLUG}`);
+    await expect(link).toHaveAttribute("target", "_blank");
+    await link.click({ noWaitAfter: true }).catch(() => {});
+    const cancelled = await page.evaluate(() => (window as unknown as { __cancelled?: boolean }).__cancelled).catch(() => undefined);
+    await ctx.close();
+    return cancelled;
+  }
+  expect(await takenOver(IPHONE, true)).toBe(true); // installed on an iPhone: handed to Safari
+  expect(await takenOver(ANDROID, true)).toBe(true); // installed on Android: handed to Chrome
+  expect(await takenOver(IPHONE, false)).toBe(false); // an ordinary browser tab: the normal new tab
+  expect(await takenOver(ANDROID, false)).toBe(false);
+});
