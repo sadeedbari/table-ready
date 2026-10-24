@@ -9,15 +9,12 @@ for (const line of fs.readFileSync(".env.local", "utf8").split(/\r?\n/)) {
 }
 export const OWNER = { email: "delivered+e2e-owner@resend.dev", password: "E2e-Passw0rd!" };
 export const SLUG = "e2e-bistro";
-/** A second test restaurant WITHOUT the e2e- prefix, so the public-form limits apply to it. */
-export const LIMIT_SLUG = "limit-e2e-test";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const admin = createClient(url, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
 
 export async function cleanup() {
-  await admin.from("restaurants").delete().or("slug.like.e2e-%,slug.eq.limit-e2e-test");
-  await admin.from("rate_limit_hits").delete().or("bucket.like.%e2e-%,bucket.like.%limit-e2e-test%");
+  await admin.from("restaurants").delete().like("slug", "e2e-%");
   const { data } = await admin.auth.admin.listUsers({ perPage: 200 });
   for (const u of data?.users ?? []) if (u.email?.endsWith("@tableready-e2e.test") || u.email?.startsWith("delivered+e2e-")) await admin.auth.admin.deleteUser(u.id);
 }

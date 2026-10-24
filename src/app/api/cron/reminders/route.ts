@@ -31,8 +31,6 @@ export async function GET(request: NextRequest) {
     await sendReminder(r, row);
     reminded++;
   }
-  // Rate-limit counts older than a day are no use any more.
-  await db.from("rate_limit_hits").delete().lt("at", new Date(now - 24 * 3600_000).toISOString());
   // Anyone still marked in line after 18 hours is long gone: close those entries.
   await db.from("walkins").update({ status: "cancelled", closed_at: new Date().toISOString() }).in("status", ["waiting", "ready"]).lt("joined_at", new Date(now - 18 * 3600_000).toISOString());
   const { data: restaurants } = await db.from("restaurants").select("*");

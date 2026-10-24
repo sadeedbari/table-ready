@@ -7,7 +7,6 @@ import { suggestQuote } from "@/lib/queue";
 import { loadRestaurantData } from "@/lib/reservations";
 import { sendWalkinJoined } from "@/lib/emails";
 import { notifyStaff } from "@/lib/notify-staff";
-import { LIMITS, TOO_MANY, allow } from "@/lib/rate-limit";
 import { friendlyZodMessage } from "@/lib/zod-message";
 import type { ActionResult } from "@/components/ui/action-form";
 
@@ -33,7 +32,6 @@ export async function joinQueue(slug: string, fd: FormData): Promise<ActionResul
   if (v.party > r.max_party_size) return { error: "For a party that size, please check in with the host." };
   const phone = normalizePhone(v.phone, "CAD");
   if (!phone) return { error: "Please enter a valid phone number, for example 416 555 0123." };
-  if (!(await allow(LIMITS.queueByAddress(slug))) || !(await allow(LIMITS.queueByPhone(slug, phone)))) return { error: TOO_MANY };
 
   const db = createAdminClient();
   const { data: open } = await db.from("walkins").select("id, phone, status").eq("restaurant_id", r.id).in("status", ["waiting", "ready"]);
