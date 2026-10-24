@@ -13,7 +13,14 @@ export const metadata: Metadata = {
   openGraph: { siteName: "Table Ready", locale: "en_CA", type: "website" },
   applicationName: "Table Ready",
   appleWebApp: { capable: true, title: "Table Ready", statusBarStyle: "default" },
-  icons: { apple: "/icons/apple-touch-180.png" },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: "/icons/apple-touch-180.png",
+  },
   formatDetection: { telephone: false },
 };
 
