@@ -32,8 +32,8 @@ export function AddReservation({ slug, date, tables }: { slug: string; date: str
       <Sheet open={open} onClose={() => setOpen(false)} title="Add a reservation" subtitle="For phone calls and walk-ups. Online limits do not apply.">
         <ActionForm action={addReservation.bind(null, slug)} submit="Add reservation" onDone={() => setOpen(false)}>
           <Field label="Guest name"><Input name="name" required autoFocus maxLength={120} /></Field>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <Field label="Guests" className="col-span-2 sm:col-span-1"><Input name="party" type="number" min={1} max={50} defaultValue={2} required inputMode="numeric" /></Field>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <Field label="Guests"><Input name="party" type="number" min={1} max={50} defaultValue={2} required inputMode="numeric" /></Field>
             <Field label="Date" className="min-w-0"><Input name="date" type="date" defaultValue={date} required /></Field>
             <Field label="Time" className="min-w-0"><Input name="time" type="time" step={900} defaultValue="18:00" required /></Field>
           </div>

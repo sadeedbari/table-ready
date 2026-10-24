@@ -55,7 +55,17 @@ async function audit(page: Page) {
         }
       }
     }
-    return { overflow: doc.scrollWidth - doc.clientWidth, fields, tiny, overlaps };
+    // A control that sticks out past the form or card it sits in (the background box).
+    const outside = controls
+      .filter((c) => {
+        const box = c.closest("form, [role=dialog]");
+        if (!box) return false;
+        const r = c.getBoundingClientRect();
+        const f = box.getBoundingClientRect();
+        return r.right > f.right + 1 || r.left < f.left - 1;
+      })
+      .map((c) => c.getAttribute("name") || c.getAttribute("aria-label") || c.tagName);
+    return { overflow: doc.scrollWidth - doc.clientWidth, fields, tiny, overlaps, outside };
   });
 }
 
@@ -107,6 +117,7 @@ test("the restaurant's screens fit a 375px phone", async ({ page }) => {
     if (a.fields.length) problems.push(`${path || "/"}: fields under 16px: ${a.fields.join(", ")}`);
     if (a.tiny.length) problems.push(`${path || "/"}: small tap targets: ${a.tiny.map((t) => `${t.text} ${t.w}x${t.h}`).join("; ")}`);
     if (a.overlaps.length) problems.push(`${path || "/"}: controls overlap: ${a.overlaps.join("; ")}`);
+    if (a.outside.length) problems.push(`${path || "/"}: controls stick out of their box: ${a.outside.join(", ")}`);
   }
   expect(problems, problems.join("\n")).toEqual([]);
 });

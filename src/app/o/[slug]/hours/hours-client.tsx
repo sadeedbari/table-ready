@@ -34,11 +34,11 @@ export function PeriodEditor({ slug, period, disabled }: { slug: string; period:
         size="sm"
         footer={disabled ? undefined : <ActionButton action={() => deletePeriod(slug, period.id)} variant="destructive" confirm={`Remove ${period.name}?`}>Remove</ActionButton>}
       >
-        <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end sm:gap-x-4">
-          <Field label="Name" className="col-span-2 sm:w-40"><Input name="name" defaultValue={period.name} required maxLength={40} disabled={disabled} /></Field>
+        <div className="grid grid-cols-1 gap-3 sm:flex sm:flex-wrap sm:items-end sm:gap-x-4">
+          <Field label="Name" className="sm:w-40"><Input name="name" defaultValue={period.name} required maxLength={40} disabled={disabled} /></Field>
           <Field label="Opens" className="min-w-0"><Input name="opens" type="time" defaultValue={period.opens.slice(0, 5)} required disabled={disabled} /></Field>
           <Field label="Last seating" className="min-w-0"><Input name="last_seating" type="time" defaultValue={period.last_seating.slice(0, 5)} required disabled={disabled} /></Field>
-          <div className="col-span-2 flex items-center gap-2 sm:col-span-1 sm:pb-2.5"><Switch name="active" defaultChecked={period.active} label="Active" disabled={disabled} /><span className="text-[14px]">Active</span></div>
+          <div className="flex items-center gap-2 sm:pb-2.5"><Switch name="active" defaultChecked={period.active} label="Active" disabled={disabled} /><span className="text-[14px]">Active</span></div>
         </div>
         <DayPicker selected={period.days} disabled={disabled} />
       </ActionForm>
@@ -51,8 +51,8 @@ export function NewPeriod({ slug }: { slug: string }) {
     <Card className="mt-4 !p-4">
       <h3 className="mb-3 text-[17px]">Add a service</h3>
       <ActionForm action={savePeriod.bind(null, slug, null)} submit="Add service" resetOnSuccess size="sm">
-        <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end sm:gap-x-4">
-          <Field label="Name" className="col-span-2 sm:w-40"><Input name="name" required maxLength={40} placeholder="Lunch" /></Field>
+        <div className="grid grid-cols-1 gap-3 sm:flex sm:flex-wrap sm:items-end sm:gap-x-4">
+          <Field label="Name" className="sm:w-40"><Input name="name" required maxLength={40} placeholder="Lunch" /></Field>
           <Field label="Opens" className="min-w-0"><Input name="opens" type="time" defaultValue="11:30" required /></Field>
           <Field label="Last seating" className="min-w-0"><Input name="last_seating" type="time" defaultValue="14:00" required /></Field>
         </div>
