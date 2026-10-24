@@ -1,8 +1,10 @@
 import "server-only";
+import { bg } from "@/lib/background";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { addDaysToKey, dayKey, startOfDayInZone, todayKey } from "@/lib/format";
 import { availableSlots, toMinutes } from "@/lib/hours";
 import { sendCancellation, sendConfirmation, sendWaitlistOpening } from "@/lib/emails";
+import { notifyStaff, reservationMessage } from "@/lib/notify-staff";
 import type { Closure, DiningTable, Reservation, Restaurant, ServicePeriod, WaitlistEntry } from "@/lib/types";
 
 export interface RestaurantData {
@@ -86,7 +88,11 @@ export async function bookTable(
   }
   const row = Array.isArray(data) ? data[0] : data;
   if (!row) return { ok: false, error: "Something went wrong booking that table. Please try again." };
-  void sendConfirmation(r, { guest_name: input.name, email: input.email ?? null, party_size: input.party, starts_at: input.startsAt, token: row.token });
+  bg(sendConfirmation(r, { guest_name: input.name, email: input.email ?? null, party_size: input.party, starts_at: input.startsAt, token: row.token }));
+  // The team is told about guests who book themselves; staff who add a booking already know about it.
+  if (input.source === "online") {
+    bg(notifyStaff(r, reservationMessage(r, { id: row.reservation_id, guest_name: input.name, party_size: input.party, starts_at: input.startsAt, notes: input.notes ?? null }, row.table_name)));
+  }
   return { ok: true, token: row.token as string, reservationId: row.reservation_id as string };
 }
 
@@ -95,7 +101,7 @@ export async function cancelReservation(r: Restaurant, reservation: Reservation,
   const db = createAdminClient();
   const { error } = await db.from("reservations").update({ status: "cancelled" }).eq("id", reservation.id).in("status", ["confirmed"]);
   if (error) return false;
-  if (opts.notifyGuest !== false) void sendCancellation(r, reservation);
+  if (opts.notifyGuest !== false) bg(sendCancellation(r, reservation));
   await flushWaitlist(r);
   return true;
 }

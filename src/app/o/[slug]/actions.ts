@@ -1,5 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
+import { bg } from "@/lib/background";
 import { z } from "zod";
 import { getRestaurantContext } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -253,7 +254,7 @@ export async function addWalkin(slug: string, fd: FormData): Promise<ActionResul
     source: "host",
   }).select("*").single();
   if (error || !data) return { error: friendlyDbError(error) ?? "Something went wrong. Please try again." };
-  void sendWalkinJoined(restaurant, data as Walkin);
+  bg(sendWalkinJoined(restaurant, data as Walkin));
   refresh(slug);
   return { message: `${v.name} added to the line` };
 }
@@ -273,7 +274,7 @@ export async function setWalkinStatus(slug: string, id: string, status: WalkinSt
     : { status, closed_at: now };
   const { error } = await supabase.from("walkins").update(patch).eq("id", id);
   if (error) return { error: friendlyDbError(error) };
-  if (status === "ready" && w.status !== "ready") void sendWalkinReady(restaurant, w as Walkin);
+  if (status === "ready" && w.status !== "ready") bg(sendWalkinReady(restaurant, w as Walkin));
   refresh(slug);
   if (status === "ready") return { message: w.email ? "Marked ready and emailed" : "Marked ready" };
 }
@@ -286,4 +287,14 @@ export async function setQueueOpen(slug: string, fd: FormData): Promise<ActionRe
   if (error) return { error: friendlyDbError(error) };
   refresh(slug);
   return { message: "Saved" };
+}
+
+export async function saveNotificationSettings(slug: string, fd: FormData): Promise<ActionResult> {
+  const { restaurant, isAdmin } = await getRestaurantContext(slug);
+  if (!isAdmin) return NOT_ALLOWED;
+  const supabase = await createClient();
+  const { error } = await supabase.from("restaurants").update({ notify_push: fd.get("notify_push") === "on", notify_email: fd.get("notify_email") === "on" }).eq("id", restaurant.id);
+  if (error) return { error: friendlyDbError(error) };
+  refresh(slug);
+  return { message: "Notification settings saved" };
 }

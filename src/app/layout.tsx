@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "@fontsource-variable/inter";
 import "@fontsource-variable/fraunces";
+import { RegisterSW } from "@/components/app/pwa";
 import { ToastProvider } from "@/components/ui/toast";
 import { SITE_URL } from "@/lib/site";
 import "./globals.css";
@@ -11,6 +12,8 @@ export const metadata: Metadata = {
   description: "Online reservations and a waitlist for restaurants. Choose which tables and seats are open to online guests, and fill every seating.",
   openGraph: { siteName: "Table Ready", locale: "en_CA", type: "website" },
   applicationName: "Table Ready",
+  appleWebApp: { capable: true, title: "Table Ready", statusBarStyle: "default" },
+  icons: { apple: "/icons/apple-touch-180.png" },
   formatDetection: { telephone: false },
 };
 
@@ -32,6 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-dvh">
         <ToastProvider>{children}</ToastProvider>
+        <RegisterSW />
       </body>
     </html>
   );

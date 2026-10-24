@@ -1,10 +1,12 @@
 "use server";
 import { z } from "zod";
+import { bg } from "@/lib/background";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { normalizePhone } from "@/lib/phone";
 import { suggestQuote } from "@/lib/queue";
 import { loadRestaurantData } from "@/lib/reservations";
 import { sendWalkinJoined } from "@/lib/emails";
+import { notifyStaff } from "@/lib/notify-staff";
 import { friendlyZodMessage } from "@/lib/zod-message";
 import type { ActionResult } from "@/components/ui/action-form";
 
@@ -45,7 +47,8 @@ export async function joinQueue(slug: string, fd: FormData): Promise<ActionResul
     console.error("[queue]", error?.message);
     return { error: "Something went wrong. Please try again." };
   }
-  void sendWalkinJoined(r, row);
+  bg(sendWalkinJoined(r, row));
+  bg(notifyStaff(r, { title: "Joined the line", body: `${v.name} · ${v.party} ${v.party === 1 ? "guest" : "guests"} · ${phone}`, path: "/queue", tag: `walkin-${row.id}` }));
   return { redirect: `/queue/${row.token}` };
 }
 

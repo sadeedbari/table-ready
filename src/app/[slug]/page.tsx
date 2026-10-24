@@ -68,7 +68,7 @@ export default async function ReservePage(props: PageProps<"/[slug]">) {
             <h2 className="text-[22px]">Your details</h2>
             <p className="mt-1 mb-5 inline-flex items-center gap-2 text-[15px] text-label-2"><CalendarCheck className="size-4" aria-hidden />{dayLabel(date!, true)} at {formatTime(chosen.startsAt, r.timezone)} · {party} {party === 1 ? "guest" : "guests"}</p>
             <DetailsForm slug={slug} party={party} startsAt={chosen.startsAt} />
-            <p className="mt-4 text-center text-[13px]"><Link className="text-accent-text underline" href={`/${slug}?party=${party}&date=${date}`}>Pick a different time</Link></p>
+            <p className="mt-4 text-center text-[13px]"><Link className="inline-flex min-h-11 items-center px-2 text-accent-text underline" href={`/${slug}?party=${party}&date=${date}`}>Pick a different time</Link></p>
           </>
         ) : (
           <>
@@ -99,7 +99,7 @@ export default async function ReservePage(props: PageProps<"/[slug]">) {
           </>
         )}
       </section>
-      <p className="mt-8 text-center text-[13px] text-label-3"><Link href="/"><Logo className="text-[14px] opacity-70" /></Link></p>
+      <p className="mt-6 text-center text-[13px] text-label-3"><Link href="/" className="inline-flex min-h-11 items-center"><Logo className="text-[14px] opacity-70" /></Link></p>
     </main>
   );
 }

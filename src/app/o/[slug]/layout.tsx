@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { Logo } from "@/components/app/logo";
+import { InstallBanner } from "@/components/app/pwa";
+import { PushBanner } from "@/components/app/push-device";
+import { env } from "@/lib/env";
 import { getRestaurantContext } from "@/lib/auth";
 import { DashNav } from "./nav";
 
@@ -13,7 +16,7 @@ export default async function DashboardLayout(props: LayoutProps<"/o/[slug]">) {
     <div className="min-h-dvh">
       <header className="sticky top-0 z-30 glass-strong hairline">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
-          <Link href={`/o/${slug}`} className="flex items-center gap-3">
+          <Link href={`/o/${slug}`} className="flex min-h-11 items-center gap-3">
             <Logo mark className="text-[18px]" />
             <span className="text-[17px] font-semibold" style={{ fontFamily: "var(--font-display)" }}>{restaurant.name}</span>
           </Link>
@@ -26,7 +29,11 @@ export default async function DashboardLayout(props: LayoutProps<"/o/[slug]">) {
         </div>
         <DashNav slug={slug} />
       </header>
-      <main className="mx-auto max-w-5xl px-4 py-6 sm:py-8">{props.children}</main>
+      <main className="mx-auto max-w-5xl px-4 py-6 sm:py-8">
+        <InstallBanner />
+        <PushBanner vapidKey={env.vapidPublicKey ?? ""} teamEnabled={restaurant.notify_push} />
+        {props.children}
+      </main>
     </div>
   );
 }

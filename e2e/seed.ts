@@ -7,7 +7,7 @@ for (const line of fs.readFileSync(".env.local", "utf8").split(/\r?\n/)) {
   const m = line.match(/^([A-Z0-9_]+)=(.*)$/);
   if (m && process.env[m[1]] === undefined) process.env[m[1]] = m[2];
 }
-export const OWNER = { email: "owner@tableready-e2e.test", password: "E2e-Passw0rd!" };
+export const OWNER = { email: "delivered+e2e-owner@resend.dev", password: "E2e-Passw0rd!" };
 export const SLUG = "e2e-bistro";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -16,7 +16,7 @@ const admin = createClient(url, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: 
 export async function cleanup() {
   await admin.from("restaurants").delete().like("slug", "e2e-%");
   const { data } = await admin.auth.admin.listUsers({ perPage: 200 });
-  for (const u of data?.users ?? []) if (u.email?.endsWith("@tableready-e2e.test")) await admin.auth.admin.deleteUser(u.id);
+  for (const u of data?.users ?? []) if (u.email?.endsWith("@tableready-e2e.test") || u.email?.startsWith("delivered+e2e-")) await admin.auth.admin.deleteUser(u.id);
 }
 
 export async function seed() {

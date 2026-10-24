@@ -39,10 +39,10 @@ export default function Home() {
           </div>
         ))}
       </section>
-      <footer className="mt-20 flex flex-wrap gap-x-6 gap-y-2 text-[13px] text-label-2">
-        <span>© Sulo Systems</span>
-        <Link href="/privacy" className="underline">Privacy</Link>
-        <Link href="/terms" className="underline">Terms</Link>
+      <footer className="mt-20 flex flex-wrap items-center gap-x-4 text-[13px] text-label-2">
+        <span className="py-2">© Sulo Systems</span>
+        <Link href="/privacy" className="inline-flex min-h-11 items-center px-1 underline">Privacy</Link>
+        <Link href="/terms" className="inline-flex min-h-11 items-center px-1 underline">Terms</Link>
       </footer>
     </main>
   );

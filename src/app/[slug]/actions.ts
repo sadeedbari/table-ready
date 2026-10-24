@@ -1,10 +1,12 @@
 "use server";
 import { z } from "zod";
+import { bg } from "@/lib/background";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { addDaysToKey, todayKey } from "@/lib/format";
 import { toMinutes } from "@/lib/hours";
 import { normalizePhone } from "@/lib/phone";
 import { bookTable, cancelReservation, loadRestaurantData } from "@/lib/reservations";
+import { cancellationMessage, notifyStaff } from "@/lib/notify-staff";
 import { friendlyZodMessage } from "@/lib/zod-message";
 import type { ActionResult } from "@/components/ui/action-form";
 import type { Reservation } from "@/lib/types";
@@ -74,6 +76,12 @@ export async function joinWaitlist(slug: string, fd: FormData): Promise<ActionRe
     console.error("[waitlist]", error.message);
     return { error: "Something went wrong. Please try again." };
   }
+  bg(notifyStaff(r, {
+    title: "New waitlist request",
+    body: `${v.name} · ${v.party} ${v.party === 1 ? "guest" : "guests"} · ${v.date} · ${v.from} to ${v.to}`,
+    path: "/waitlist",
+    tag: `waitlist-${v.email}-${v.date}`,
+  }));
   return { redirect: `/${slug}?waitlisted=1` };
 }
 
@@ -88,5 +96,6 @@ export async function cancelByToken(token: string): Promise<ActionResult> {
   if (Date.now() > cutoff) return { error: `It is too late to cancel online${r.phone ? `. Please call ${r.phone}` : ""}.` };
   const ok = await cancelReservation(r, reservation as Reservation);
   if (!ok) return { error: "Something went wrong. Please try again." };
+  bg(notifyStaff(r, cancellationMessage(r, reservation as Reservation)));
   return { redirect: `/reservation/${token}` };
 }

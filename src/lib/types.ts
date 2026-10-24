@@ -16,6 +16,8 @@ export interface Restaurant {
   website: string | null;
   online_enabled: boolean;
   queue_open: boolean;
+  notify_push: boolean;
+  notify_email: boolean;
   min_notice_minutes: number;
   max_advance_days: number;
   slot_interval_minutes: number;

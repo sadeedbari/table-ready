@@ -98,3 +98,13 @@ export async function sendWalkinReady(r: Pick<Restaurant, "name" | "phone">, w: 
     text: `Your table for ${party(w.party_size)} is ready at ${r.name}. Please check in with the host.`,
   });
 }
+
+/** An alert to the restaurant's own team (sent to the email address on each owner's and admin's account). */
+export async function sendStaffEmail(to: string, restaurant: string, title: string, body: string, url: string) {
+  await sendEmail({
+    to,
+    subject: `${title} · ${restaurant}`,
+    html: shell(title, `<p style="margin:0 0 12px;font-size:17px;color:#2a211c"><strong>${esc(body)}</strong></p><p style="margin:0">This is an alert from Table Ready for ${esc(restaurant)}. You can turn these emails off in Settings.</p>`, { href: url, label: "Open Table Ready" }),
+    text: `${title}\n${body}\n\nOpen: ${url}`,
+  });
+}
