@@ -153,3 +153,19 @@ test("the owner can switch alerts off and on from Settings", async ({ page }) =>
   const { data } = await db.from("restaurants").select("notify_email, notify_push").eq("id", restaurantId).single();
   expect(data).toEqual({ notify_email: false, notify_push: true });
 });
+
+test("Sign out lives at the bottom of Settings, not in the top bar, and it signs the person out", async ({ page }) => {
+  await signIn(page);
+  await page.goto(`/o/${SLUG}`);
+  await expect(page.locator("header").getByRole("button", { name: "Sign out" })).toHaveCount(0);
+  await page.goto(`/o/${SLUG}/settings`);
+  const button = page.getByRole("button", { name: "Sign out" });
+  await expect(button).toBeVisible();
+  const lastCard = (await page.locator("main > *").last().boundingBox())!;
+  const buttonBox = (await button.boundingBox())!;
+  expect(buttonBox.y).toBeGreaterThan(lastCard.y - 1); // it is in the last section of the page
+  await button.click();
+  await page.waitForURL((u) => u.pathname === "/");
+  await page.goto(`/o/${SLUG}`);
+  await expect(page).toHaveURL(/\/login/);
+});

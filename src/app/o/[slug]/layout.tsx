@@ -13,7 +13,7 @@ export const metadata = { robots: { index: false, follow: false } };
 
 export default async function DashboardLayout(props: LayoutProps<"/o/[slug]">) {
   const { slug } = await props.params;
-  const { restaurant, me } = await getRestaurantContext(slug);
+  const { restaurant } = await getRestaurantContext(slug);
   const showing = await activeNotices(restaurant.id, "reservations").then(async (a) => {
     const q = await activeNotices(restaurant.id, "queue");
     return [...a, ...q.filter((x) => !a.some((y) => y.id === x.id))];
@@ -30,7 +30,6 @@ export default async function DashboardLayout(props: LayoutProps<"/o/[slug]">) {
             <Link href={`/${slug}`} target="_blank" className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-[13px] font-medium text-accent-text hover:bg-accent-soft">
               Public page <ExternalLink className="size-3.5" aria-hidden />
             </Link>
-            <form action="/auth/signout" method="post"><button className="h-9 rounded-full px-3 text-[13px] font-medium text-label-2 hover:bg-surface-2" title={me.display_name || undefined}>Sign out</button></form>
           </div>
         </div>
         <DashNav slug={slug} />
