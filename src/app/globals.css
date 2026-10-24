@@ -188,7 +188,7 @@
   --radius-3xl: 24px;
 
   --ease-apple: cubic-bezier(0.32, 0.72, 0, 1);
-  --ease-spring: cubic-bezier(0.25, 1, 0.5, 1); /* ease-out-quart: decelerates smoothly, no overshoot */
+  --ease-out: cubic-bezier(0.25, 1, 0.5, 1); /* ease-out-quart: decelerates smoothly, no overshoot */
 }
 
 @layer base {
@@ -270,7 +270,7 @@
 }
 .animate-sheet { animation: sheet-in 0.42s var(--ease-apple) both; }
 .animate-fade { animation: fade-in 0.25s ease both; }
-.animate-pop { animation: pop-in 0.28s var(--ease-spring) both; }
+.animate-pop { animation: pop-in 0.28s var(--ease-out) both; }
 .animate-rise { animation: rise 0.45s var(--ease-apple) both; }
 
 @media (prefers-reduced-motion: reduce) {

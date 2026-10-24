@@ -41,7 +41,7 @@ export function Switch({
       <span
         className={cn(
           "absolute left-[2px] size-[27px] rounded-full bg-white shadow-[0_3px_8px_rgba(0,0,0,0.15),0_3px_1px_rgba(0,0,0,0.06)]",
-          "transition-transform duration-300 ease-[var(--ease-spring)]",
+          "transition-transform duration-300 ease-[var(--ease-out)]",
           on ? "translate-x-[20px]" : "translate-x-0",
         )}
       />
