@@ -26,3 +26,7 @@ Without `RESEND_API_KEY`, emails are printed to the server log instead of sent.
 ## Install and alerts
 
 The site is an installable app (manifest, icons, service worker): on Android the dashboard offers "Install app", and on iPhone it explains Share → Add to Home Screen. When a guest books online, cancels, or joins the waitlist or the line, owners and admins get an email at the address on their account and a push notification on every device where they turned it on in Settings. Both can be switched off per restaurant in Settings. Push needs `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT` (see `.env.example`) and the migration `20261026000000_notifications.sql`.
+
+## Sign-up and password emails
+
+Supabase Auth sends these through Resend (Authentication > Emails > SMTP Settings: host `smtp.resend.com`, port 465, username `resend`, password = the Resend API key, sender `reservations@tableready.sulosystems.com`, name "Table Ready"). The branded templates live in `supabase/email-templates/` (`node scripts/build-email-templates.mjs` rebuilds them; subjects are in `subjects.json`). Paste each into Authentication > Emails > Templates. Links go to `/auth/confirm?token_hash=...`, which asks the person to press Continue so mail scanners can't use up the link. Site URL must be `https://tableready.sulosystems.com`.

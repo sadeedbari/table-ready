@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>Confirm your new email</title></head>
+<body style="margin:0;padding:0;background:#faf6f0;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#faf6f0;">Confirm the change to your account email.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#faf6f0;padding:32px 16px;">
+  <tr><td align="center">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;">
+      <tr><td style="padding:0 4px 20px 4px;">
+        <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+          <td style="vertical-align:middle;"><img src="https://tableready.sulosystems.com/icons/icon-192.png" width="36" height="36" alt="" style="display:block;border-radius:9px;border:0;"></td>
+          <td style="vertical-align:middle;padding-left:10px;font-family:Georgia,'Times New Roman',serif;font-size:20px;font-weight:bold;color:#2a211c;">Table Ready</td>
+        </tr></table>
+      </td></tr>
+      <tr><td style="background:#ffffff;border-radius:20px;padding:36px 32px;">
+        <h1 style="margin:0 0 14px 0;font-family:Georgia,'Times New Roman',serif;font-size:26px;line-height:1.2;color:#2a211c;font-weight:bold;">Confirm your new email</h1>
+        <p style="margin:0 0 14px 0;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.55;color:#5a4a3f;">You asked to change the email address on your Table Ready account to <strong style="color:#2a211c;">{{ .NewEmail }}</strong>.</p>
+        <p style="margin:0 0 14px 0;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.55;color:#5a4a3f;">Confirm below to make the change. Your alerts and sign-in will use this address from then on.</p>
+        <table role="presentation" cellpadding="0" cellspacing="0" style="margin:22px 0 8px 0;"><tr><td style="background:#b4491f;border-radius:999px;">
+          <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=email_change&amp;next=/app" style="display:inline-block;padding:14px 28px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none;">Confirm new email</a>
+        </td></tr></table>
+        <p style="margin:18px 0 0 0;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.5;color:#8a7a6e;">Button not working? Copy this link into your browser:<br><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=email_change&amp;next=/app" style="color:#a8431f;word-break:break-all;">{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=email_change&amp;next=/app</a></p>
+        <p style="margin:22px 0 0 0;padding-top:18px;border-top:1px solid #efe6da;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.5;color:#8a7a6e;">If you didn't request this, please ignore this email and your address will stay the same.</p>
+      </td></tr>
+      <tr><td style="padding:20px 8px 0 8px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;line-height:1.5;color:#8a7a6e;text-align:center;">
+        Table Ready &middot; Reservations, waitlist and walk-ins for restaurants<br>Sent by Sulo Systems &middot; <a href="mailto:info@sulosystems.com" style="color:#8a7a6e;">info@sulosystems.com</a>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>
