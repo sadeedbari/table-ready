@@ -1,0 +1,16 @@
+# Table Ready
+
+Reservations and a waitlist for restaurants. Next.js 16 (App Router), Supabase (Postgres + Auth, row level security), Resend email, deployed on Vercel at https://tableready.sulosystems.com.
+
+- Restaurants choose which tables and seat counts are open to online guests, set opening hours by weekday (several services per day), closures, and how long each party size keeps its table.
+- Guests pick party size, day and time at `/<slug>`; the database function `book_table()` assigns the smallest free online table and an exclusion constraint prevents double-booking.
+- Full times offer a waitlist; when a reservation is cancelled (or the daily cron runs) waiting guests whose window now has a table are emailed.
+
+## Setup
+
+1. `npm install`
+2. Copy `.env.example` to `.env.local` and fill it in (Supabase URL, publishable key, service-role key).
+3. Apply `supabase/migrations/*.sql` to the Supabase project (SQL editor, in file order).
+4. `npm run dev`, then `npm test` (unit tests) and `npm run typecheck`.
+
+Without `RESEND_API_KEY`, emails are printed to the server log instead of sent.
