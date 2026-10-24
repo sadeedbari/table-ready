@@ -1,6 +1,7 @@
 "use server";
 import { z } from "zod";
 import { bg } from "@/lib/background";
+import { LIMITS, MAX_UPCOMING_PER_EMAIL, TOO_MANY, allow } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { addDaysToKey, todayKey } from "@/lib/format";
 import { toMinutes } from "@/lib/hours";
@@ -28,6 +29,13 @@ export async function reserve(slug: string, fd: FormData): Promise<ActionResult>
   const data = await loadRestaurantData(slug);
   if (!data) return { error: "We could not find that restaurant." };
   const v = parsed.data;
+  if (!(await allow(LIMITS.reserveByAddress(slug))) || !(await allow(LIMITS.reserveByEmail(slug, v.email)))) return { error: TOO_MANY };
+  // One email cannot hold more than a few upcoming tables: that stops someone filling the book with made-up bookings.
+  const { count: upcoming } = await createAdminClient().from("reservations").select("id", { count: "exact", head: true })
+    .eq("restaurant_id", data.restaurant.id).ilike("email", v.email).in("status", ["confirmed", "seated"]).gt("ends_at", new Date().toISOString());
+  if ((upcoming ?? 0) >= MAX_UPCOMING_PER_EMAIL) {
+    return { error: `That email already has ${MAX_UPCOMING_PER_EMAIL} upcoming reservations here. To book more, please cancel one or call the restaurant${data.restaurant.phone ? ` on ${data.restaurant.phone}` : ""}.` };
+  }
   const result = await bookTable(data.restaurant, {
     name: v.name,
     email: v.email,
@@ -61,6 +69,7 @@ export async function joinWaitlist(slug: string, fd: FormData): Promise<ActionRe
   const data = await loadRestaurantData(slug);
   if (!data) return { error: "We could not find that restaurant." };
   const r = data.restaurant;
+  if (!(await allow(LIMITS.waitlistByAddress(slug))) || !(await allow(LIMITS.waitlistByEmail(slug, v.email)))) return { error: TOO_MANY };
   const today = todayKey(r.timezone);
   if (!r.online_enabled) return { error: "This restaurant is not taking online reservations right now." };
   if (v.party > r.max_party_size) return { error: "That is more guests than we can book online. Please call the restaurant." };
@@ -94,6 +103,7 @@ export async function cancelByToken(token: string): Promise<ActionResult> {
   if (!reservation) return { error: "We could not find that reservation." };
   const { data: r } = await db.from("restaurants").select("*").eq("id", reservation.restaurant_id).single();
   if (!r) return { error: "We could not find that restaurant." };
+  if (!(await allow(LIMITS.cancelByAddress(r.slug)))) return { error: TOO_MANY };
   if (reservation.status !== "confirmed") return { error: "This reservation can no longer be cancelled online." };
   const cutoff = new Date(reservation.starts_at).getTime() - r.cancellation_window_hours * 3600_000;
   if (Date.now() > cutoff) return { error: `It is too late to cancel online${r.phone ? `. Please call ${r.phone}` : ""}.` };
@@ -115,6 +125,7 @@ export async function signUpForUpdates(slug: string, fd: FormData): Promise<Acti
   if (!parsed.success) return { error: friendlyZodMessage(parsed.error) };
   const data = await loadRestaurantData(slug);
   if (!data) return { error: "We could not find that restaurant." };
+  if (!(await allow(LIMITS.signupByAddress(slug)))) return { error: TOO_MANY };
   const db = createAdminClient();
   const email = parsed.data.email.toLowerCase();
   const { data: existing } = await db.from("guest_signups").select("id").eq("restaurant_id", data.restaurant.id).ilike("email", email).maybeSingle();

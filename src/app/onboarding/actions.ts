@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { friendlyDbError } from "@/lib/db-errors";
 import { RESERVED_SLUGS, slugify } from "@/lib/utils";
+import { TEST_SLUG_PREFIX } from "@/lib/rate-limit";
 import type { ActionResult } from "@/components/ui/action-form";
 
 export async function createRestaurant(fd: FormData): Promise<ActionResult> {
@@ -13,7 +14,7 @@ export async function createRestaurant(fd: FormData): Promise<ActionResult> {
   const displayName = String(fd.get("display_name") || "").trim();
   if (!name) return { error: "Give your restaurant a name." };
   if (slug.length < 3) return { error: "Your link needs at least 3 letters or numbers." };
-  if (RESERVED_SLUGS.has(slug)) return { error: "That link is reserved. Please try another." };
+  if (RESERVED_SLUGS.has(slug) || slug.startsWith(TEST_SLUG_PREFIX)) return { error: "That link is reserved. Please try another." };
 
   const supabase = await createClient();
   const { error } = await supabase.rpc("create_restaurant", { p_name: name, p_slug: slug, p_timezone: timezone, p_display_name: displayName });
