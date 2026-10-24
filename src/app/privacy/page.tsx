@@ -21,6 +21,7 @@ export default function PrivacyPage() {
       <H2>What we collect</H2>
       <UL>
         <li><strong className="text-label">Guests:</strong> your name, email address, phone number if you give one, party size, the time you booked, and any note you add.</li>
+        <li><strong className="text-label">Updates sign-up:</strong> your email address and name if you give one, and the fact that you agreed to receive offers and news from that restaurant.</li>
         <li><strong className="text-label">Waitlist:</strong> your name, email, phone number if you give one, and the day, time window and party size you asked for.</li>
         <li><strong className="text-label">Restaurants:</strong> your name, email, restaurant details, tables, opening hours and the reservations you manage.</li>
       </UL>
@@ -28,6 +29,7 @@ export default function PrivacyPage() {
       <UL>
         <li>To make, show and manage reservations, and to email you a confirmation, a reminder and any change or cancellation.</li>
         <li>To tell you when a table opens up, if you joined a waitlist.</li>
+        <li>To keep the restaurant&apos;s guest list: when you booked or joined, how, and whether you came. The restaurant uses it to thank you, follow up after a missed visit, and, only if you ticked the box or signed up, to send you offers and news. You can opt out at any time by replying to any of its emails.</li>
         <li>To keep the service secure and working. We do not sell your information and we do not use it for advertising.</li>
       </UL>
       <H2>Who sees it</H2>

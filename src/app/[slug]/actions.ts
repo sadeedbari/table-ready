@@ -18,6 +18,7 @@ const reserveSchema = z.object({
   notes: z.string().trim().max(500),
   party: z.coerce.number().int().min(1).max(50),
   startsAt: z.iso.datetime({ offset: true, message: "Please pick a time." }),
+  marketing: z.string().optional(),
   website: z.string().max(0).optional(), // honeypot: real people never fill this in
 });
 
@@ -35,6 +36,7 @@ export async function reserve(slug: string, fd: FormData): Promise<ActionResult>
     party: v.party,
     startsAt: v.startsAt,
     source: "online",
+    marketing: v.marketing === "on",
   });
   if (!result.ok) return { error: result.error };
   return { redirect: `/reservation/${result.token}` };
@@ -48,6 +50,7 @@ const waitSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   from: z.string().regex(/^\d{2}:\d{2}$/, "Choose the earliest time you would take."),
   to: z.string().regex(/^\d{2}:\d{2}$/, "Choose the latest time you would take."),
+  marketing: z.string().optional(),
   website: z.string().max(0).optional(),
 });
 
@@ -70,7 +73,7 @@ export async function joinWaitlist(slug: string, fd: FormData): Promise<ActionRe
   if ((count ?? 0) > 0) return { error: "You are already on the waitlist for that day. We will email you if a table opens." };
   const { error } = await db.from("waitlist").insert({
     restaurant_id: r.id, guest_name: v.name, email: v.email.toLowerCase(), phone: v.phone ? (normalizePhone(v.phone, "CAD") ?? v.phone) : null,
-    party_size: v.party, wanted_date: v.date, from_time: v.from, to_time: v.to,
+    party_size: v.party, wanted_date: v.date, from_time: v.from, to_time: v.to, marketing_opt_in: v.marketing === "on",
   });
   if (error) {
     console.error("[waitlist]", error.message);
@@ -98,4 +101,29 @@ export async function cancelByToken(token: string): Promise<ActionResult> {
   if (!ok) return { error: "Something went wrong. Please try again." };
   bg(notifyStaff(r, cancellationMessage(r, reservation as Reservation)));
   return { redirect: `/reservation/${token}` };
+}
+
+const signupSchema = z.object({
+  name: z.string().trim().max(120),
+  email: z.email("Please enter a valid email address.").max(200),
+  website: z.string().max(0).optional(),
+});
+
+/** "Get offers and news": a guest gives their email and agrees to hear from the restaurant. Saying it twice changes nothing. */
+export async function signUpForUpdates(slug: string, fd: FormData): Promise<ActionResult> {
+  const parsed = signupSchema.safeParse(Object.fromEntries(fd));
+  if (!parsed.success) return { error: friendlyZodMessage(parsed.error) };
+  const data = await loadRestaurantData(slug);
+  if (!data) return { error: "We could not find that restaurant." };
+  const db = createAdminClient();
+  const email = parsed.data.email.toLowerCase();
+  const { data: existing } = await db.from("guest_signups").select("id").eq("restaurant_id", data.restaurant.id).ilike("email", email).maybeSingle();
+  if (!existing) {
+    const { error } = await db.from("guest_signups").insert({ restaurant_id: data.restaurant.id, guest_name: parsed.data.name, email, marketing_opt_in: true });
+    if (error && error.code !== "23505") {
+      console.error("[signup]", error.message);
+      return { error: "Something went wrong. Please try again." };
+    }
+  }
+  return { redirect: `/${slug}?subscribed=1` };
 }

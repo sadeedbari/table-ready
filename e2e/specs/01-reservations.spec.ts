@@ -18,7 +18,7 @@ function at(hhmm: string) {
 
 async function signIn(page: Page) {
   await page.goto("/login");
-  await page.getByLabel("Email").fill(OWNER.email);
+  await page.getByLabel(/^Email/).first().fill(OWNER.email);
   await page.getByLabel("Password").fill(OWNER.password);
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.waitForURL(new RegExp(`/o/${SLUG}`));
@@ -44,7 +44,7 @@ test("a guest books a table, the owner sees it on the list and cancels it", asyn
   await page.getByRole("link", { name: "6:00 PM", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Your details" })).toBeVisible();
   await page.getByLabel("Full name").fill("Gina Guest");
-  await page.getByLabel("Email").fill("delivered+gina@resend.dev");
+  await page.getByLabel(/^Email/).first().fill("delivered+gina@resend.dev");
   await page.getByRole("button", { name: "Confirm reservation" }).click();
   await page.waitForURL(/\/reservation\/[a-f0-9]{48}/);
   await expect(page.getByRole("heading", { name: "You're booked" })).toBeVisible();
@@ -88,7 +88,7 @@ test("a full table is never double-booked and a full time offers the waitlist, w
   await page.goto(`/${SLUG}?party=3&date=${tomorrow}`);
   await expect(page.getByText(/No tables for 3 guests/)).toBeVisible();
   await page.getByLabel("Full name").fill("Wanda Waiting");
-  await page.getByLabel("Email").fill("delivered+wanda@resend.dev");
+  await page.getByLabel(/^Email/).first().fill("delivered+wanda@resend.dev");
   await page.getByRole("button", { name: "Join the waitlist" }).click();
   await page.waitForURL(/waitlisted=1/);
   await expect(page.getByText("You are on the waitlist")).toBeVisible();

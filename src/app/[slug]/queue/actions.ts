@@ -17,6 +17,7 @@ const joinSchema = z.object({
   party: z.coerce.number().int().min(1, "Please enter how many are in your party.").max(50),
   phone: z.string().trim().min(1, "Please enter a phone number so we can reach you.").max(40),
   email: z.union([z.literal(""), z.email("That email does not look right.")]),
+  marketing: z.string().optional(),
   website: z.string().max(0).optional(), // honeypot
 });
 
@@ -41,7 +42,7 @@ export async function joinQueue(slug: string, fd: FormData): Promise<ActionResul
   const waiting = line.filter((w) => w.status === "waiting").length;
   const { data: row, error } = await db.from("walkins").insert({
     restaurant_id: r.id, guest_name: v.name, party_size: v.party, phone, email: v.email ? v.email.toLowerCase() : null,
-    quoted_minutes: suggestQuote(waiting), source: "online",
+    quoted_minutes: suggestQuote(waiting), source: "online", marketing_opt_in: v.marketing === "on" && Boolean(v.email),
   }).select("*").single();
   if (error || !row) {
     console.error("[queue]", error?.message);

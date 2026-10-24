@@ -68,7 +68,7 @@ export type BookResult = { ok: true; token: string; reservationId: string } | { 
 /** Books a table through the database function (which re-checks hours and double-booking), then sends the confirmation. */
 export async function bookTable(
   r: Restaurant,
-  input: { name: string; email?: string; phone?: string; party: number; startsAt: string; notes?: string; source: "online" | "host"; tableId?: string | null },
+  input: { name: string; email?: string; phone?: string; party: number; startsAt: string; notes?: string; source: "online" | "host"; tableId?: string | null; marketing?: boolean },
 ): Promise<BookResult> {
   const { data, error } = await createAdminClient().rpc("book_table", {
     p_restaurant: r.id,
@@ -88,6 +88,13 @@ export async function bookTable(
   }
   const row = Array.isArray(data) ? data[0] : data;
   if (!row) return { ok: false, error: "Something went wrong booking that table. Please try again." };
+  const db = createAdminClient();
+  if (input.marketing) await db.from("reservations").update({ marketing_opt_in: true }).eq("id", row.reservation_id);
+  // Someone who was waiting for a table and now has one is no longer waiting: that is how the guest list tells "got a table" from "never booked".
+  if (input.email) {
+    await db.from("waitlist").update({ status: "booked" }).eq("restaurant_id", r.id).eq("email", input.email.toLowerCase())
+      .eq("wanted_date", dayKey(input.startsAt, r.timezone)).in("status", ["waiting", "notified"]);
+  }
   bg(sendConfirmation(r, { guest_name: input.name, email: input.email ?? null, party_size: input.party, starts_at: input.startsAt, token: row.token }));
   // The team is told about guests who book themselves; staff who add a booking already know about it.
   if (input.source === "online") {

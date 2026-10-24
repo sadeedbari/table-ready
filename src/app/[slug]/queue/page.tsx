@@ -34,7 +34,7 @@ export default async function JoinQueuePage(props: PageProps<"/[slug]/queue">) {
             <p className="mb-5 rounded-[12px] bg-accent-soft px-3.5 py-2.5 text-[14px] font-medium text-accent-text" aria-live="polite">
               {ahead === 0 ? "No one is waiting right now." : `${ahead} ${ahead === 1 ? "party is" : "parties are"} waiting ahead of you.`}
             </p>
-            <JoinForm slug={slug} maxParty={r.max_party_size} />
+            <JoinForm slug={slug} maxParty={r.max_party_size} restaurant={r.name} />
           </>
         ) : (
           <div className="py-4 text-center">

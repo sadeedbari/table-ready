@@ -10,7 +10,7 @@ import { loadRestaurantData, slotsFor } from "@/lib/reservations";
 import { activeNotices } from "@/lib/notices-server";
 import { NoticeBanner } from "@/components/app/notice-banner";
 import { SITE_NAME } from "@/lib/site";
-import { DetailsForm, Picker, WaitlistForm } from "./reserve-client";
+import { DetailsForm, Picker, SignupForm, WaitlistForm } from "./reserve-client";
 
 export async function generateMetadata(props: PageProps<"/[slug]">): Promise<Metadata> {
   const { slug } = await props.params;
@@ -58,6 +58,7 @@ export default async function ReservePage(props: PageProps<"/[slug]">) {
 
       <div className="mb-4"><NoticeBanner notices={notices} timeZone={r.timezone} /></div>
 
+      {one("subscribed") && <div className="mb-4"><Notice tone="green" live>Thank you! You are signed up for offers and news from {r.name}.</Notice></div>}
       {one("waitlisted") && <div className="mb-4"><Notice tone="green" live>You are on the waitlist. We will email you the moment a table opens up.</Notice></div>}
 
       <section className="rounded-[24px] bg-surface p-5 shadow-md hairline sm:p-7">
@@ -72,7 +73,7 @@ export default async function ReservePage(props: PageProps<"/[slug]">) {
           <>
             <h2 className="text-[22px]">Your details</h2>
             <p className="mt-1 mb-5 inline-flex items-center gap-2 text-[15px] text-label-2"><CalendarCheck className="size-4" aria-hidden />{dayLabel(date!, true)} at {formatTime(chosen.startsAt, r.timezone)} · {party} {party === 1 ? "guest" : "guests"}</p>
-            <DetailsForm slug={slug} party={party} startsAt={chosen.startsAt} />
+            <DetailsForm slug={slug} party={party} startsAt={chosen.startsAt} restaurant={r.name} />
             <p className="mt-4 text-center text-[13px]"><Link className="inline-flex min-h-11 items-center px-2 text-accent-text underline" href={`/${slug}?party=${party}&date=${date}`}>Pick a different time</Link></p>
           </>
         ) : (
@@ -97,13 +98,20 @@ export default async function ReservePage(props: PageProps<"/[slug]">) {
                 <div className="rounded-[16px] bg-surface-2 p-5">
                   <h3 className="text-[17px]">No tables for {party} {party === 1 ? "guest" : "guests"} on {dayLabel(date!)}</h3>
                   <p className="mt-1 mb-4 text-[14px] text-label-2">Try another day or party size, or join the waitlist and we will email you if a table opens.</p>
-                  <WaitlistForm slug={slug} party={party} date={date!} />
+                  <WaitlistForm slug={slug} party={party} date={date!} restaurant={r.name} />
                 </div>
               )}
             </div>
           </>
         )}
       </section>
+      {r.online_enabled && !chosen && (
+        <section className="mt-6 rounded-[24px] bg-surface p-5 shadow-sm hairline sm:p-6" aria-labelledby="updates-heading">
+          <h2 id="updates-heading" className="text-[19px]">Get offers and news</h2>
+          <p className="mt-1 mb-4 text-[14px] text-label-2">Not booking right now? Leave your email and {r.name} will keep in touch.</p>
+          <SignupForm slug={slug} restaurant={r.name} />
+        </section>
+      )}
       <p className="mt-6 text-center text-[13px] text-label-3"><Link href="/" className="inline-flex min-h-11 items-center"><Logo className="text-[14px] opacity-70" /></Link></p>
     </main>
   );

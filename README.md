@@ -34,3 +34,7 @@ Supabase Auth sends these through Resend (Authentication > Emails > SMTP Setting
 ## Guest notices
 
 Settings > Guest notice lets any team member post a short message (for example "The kitchen is backed up") with a start and end time in the restaurant's time zone. It shows at the top of the reservation page (which holds the waitlist) and the walk-in line pages while it is active, and disappears by itself at the end time or when someone presses "End now". Staff see what guests currently see at the top of the dashboard. Apply `supabase/migrations/20261027000000_guest_notices.sql` first.
+
+## Guest list
+
+`/o/<slug>/guests` lists everyone who reached the restaurant: reservations, the waitlist, the walk-in line, and the "Get offers and news" sign-up on the public page. Each entry shows the date added, how they came, the outcome (showed, no-show, cancelled, left the line, booked a table after waiting, and so on), their contact details, and whether they agreed to marketing emails (an unticked box on the booking, waitlist and line forms, or the sign-up itself). It is a database view (`guest_log`) over the existing tables, so it is always current. Owners and admins can download the filtered list as CSV. Apply `supabase/migrations/20261028000000_guest_list.sql` first. Only email people who agreed to marketing for offers and coupons; a thank-you about a visit they made is a different matter, but check the rules that apply to you (CASL in Canada).
