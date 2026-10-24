@@ -108,3 +108,24 @@ export async function sendStaffEmail(to: string, restaurant: string, title: stri
     text: `${title}\n${body}\n\nOpen: ${url}`,
   });
 }
+
+interface Slot { starts_at: string; party_size: number }
+
+/** Sent when staff change a reservation (for example after the guest phoned): the new details first, then what it was before. */
+export async function sendReservationChanged(r: R, x: Pick<Reservation, "guest_name" | "token"> & { email: string }, before: Slot, after: Slot) {
+  const nowText = `${when(r, after)} · ${party(after.party_size)}`;
+  const wasText = `${when(r, before)} · ${party(before.party_size)}`;
+  const lines = [
+    `${esc(x.guest_name)}, your reservation at <strong>${esc(r.name)}</strong> has been updated.`,
+    `<span style="display:block;padding:14px 16px;background:#faf6f0;border-radius:12px;color:#2a211c"><strong>Your reservation now</strong><br>${esc(nowText)}</span>`,
+    `<span style="color:#8a7a6e;font-size:13px">It was: ${esc(wasText)}</span>`,
+  ];
+  if (r.address) lines.push(esc(r.address));
+  if (r.phone) lines.push(`If this is not right, please call ${esc(r.phone)}.`);
+  await sendEmail({
+    to: x.email,
+    subject: `Your reservation at ${r.name} has been updated`,
+    html: shell("Your reservation was updated", lines.map((l) => `<p style="margin:0 0 12px">${l}</p>`).join(""), { href: manageUrl(x.token), label: "View or cancel" }),
+    text: `Your reservation at ${r.name} has been updated.\nNow: ${nowText}\nWas: ${wasText}\nView or cancel: ${manageUrl(x.token)}`,
+  });
+}

@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { addDaysToKey, formatDate, formatTime, startOfDayInZone, todayKey } from "@/lib/format";
 import { Badge, Card, EmptyState, PageHeader, statusTone } from "@/components/ui/misc";
 import { STATUS_LABEL } from "@/lib/format";
+import { toLocalInput } from "@/lib/notices";
 import { AddReservation, RowActions } from "./today-client";
 import type { DiningTable, Reservation } from "@/lib/types";
 
@@ -75,7 +76,13 @@ export default async function TodayPage(props: PageProps<"/o/[slug]">) {
                   </div>
                   {r.notes && <p className="mt-1.5 inline-flex items-start gap-1.5 text-[14px] text-label-2"><StickyNote className="mt-0.5 size-4 shrink-0" aria-hidden />{r.notes}</p>}
                 </div>
-                <div className="flex flex-wrap items-center gap-2"><RowActions slug={slug} id={r.id} status={r.status} /></div>
+                <div className="flex flex-wrap items-center gap-2"><RowActions
+                    slug={slug}
+                    id={r.id}
+                    status={r.status}
+                    tables={allTables.filter((t) => t.active || t.id === r.table_id)}
+                    edit={{ name: r.guest_name, party: r.party_size, startLocal: toLocalInput(new Date(r.starts_at), restaurant.timezone), email: r.email ?? "", phone: r.phone ?? "", notes: r.notes ?? "", tableId: r.table_id ?? "" }}
+                  /></div>
               </Card>
             </li>
           ))}

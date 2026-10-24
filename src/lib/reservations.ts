@@ -143,3 +143,29 @@ export async function expireWaitlist(r: Pick<Restaurant, "id" | "timezone">) {
 }
 
 export { dayKey };
+
+const CHANGE_ERRORS: Record<string, string> = {
+  no_table: "No table is free at that time for that many guests. Try another time, or choose a table.",
+  not_editable: "Only a confirmed or seated reservation can be changed.",
+  unknown_reservation: "That reservation no longer exists.",
+  bad_party: "Please enter how many guests.",
+};
+
+export type ChangeResult = { ok: true; tableName: string | null } | { ok: false; error: string };
+
+/** Moves a reservation to a new time, party size or table. The database re-checks the table and refuses a clash. */
+export async function changeReservationSlot(reservationId: string, input: { startsAt: string; party: number; tableId?: string | null }): Promise<ChangeResult> {
+  const { data, error } = await createAdminClient().rpc("change_reservation", {
+    p_reservation: reservationId,
+    p_starts: input.startsAt,
+    p_party: input.party,
+    p_table: input.tableId ?? undefined,
+  });
+  if (error) {
+    const key = Object.keys(CHANGE_ERRORS).find((k) => error.message.includes(k));
+    if (!key) console.error("[change_reservation]", error.message);
+    return { ok: false, error: key ? CHANGE_ERRORS[key] : "Something went wrong changing that reservation. Please try again." };
+  }
+  const row = Array.isArray(data) ? data[0] : data;
+  return { ok: true, tableName: (row?.table_name as string | null) ?? null };
+}

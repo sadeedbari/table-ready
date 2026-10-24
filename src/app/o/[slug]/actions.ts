@@ -7,9 +7,9 @@ import { createClient } from "@/lib/supabase/server";
 import { friendlyDbError } from "@/lib/db-errors";
 import { instantAt, toMinutes } from "@/lib/hours";
 import { parseLocalInput } from "@/lib/notices";
-import { bookTable, cancelReservation, flushWaitlist } from "@/lib/reservations";
+import { bookTable, cancelReservation, changeReservationSlot, flushWaitlist } from "@/lib/reservations";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendWalkinJoined, sendWalkinReady } from "@/lib/emails";
+import { sendReservationChanged, sendWalkinJoined, sendWalkinReady } from "@/lib/emails";
 import { normalizePhone } from "@/lib/phone";
 import { friendlyZodMessage as zodMessage } from "@/lib/zod-message";
 import type { ActionResult } from "@/components/ui/action-form";
@@ -350,4 +350,45 @@ export async function deleteNotice(slug: string, id: string): Promise<ActionResu
   if (error) return { error: friendlyDbError(error) };
   refresh(slug);
   revalidatePath(`/${slug}`);
+}
+
+// ─────────────── Changing a reservation (any team member) ───────────────
+
+const editSchema = addSchema.extend({ notify: z.string().optional() });
+
+export async function editReservation(slug: string, id: string, fd: FormData): Promise<ActionResult> {
+  const { restaurant } = await getRestaurantContext(slug);
+  const parsed = editSchema.safeParse(Object.fromEntries(fd));
+  if (!parsed.success) return { error: zodMessage(parsed.error) };
+  const v = parsed.data;
+  const supabase = await createClient();
+  const { data: old } = await supabase.from("reservations").select("*").eq("id", id).eq("restaurant_id", restaurant.id).maybeSingle();
+  if (!old) return { error: "That reservation no longer exists." };
+  if (old.status !== "confirmed" && old.status !== "seated") return { error: "Only a confirmed or seated reservation can be changed." };
+
+  const startsAt = instantAt(v.date, toMinutes(v.time), restaurant.timezone).toISOString();
+  const timeOrPartyChanged = startsAt !== new Date(old.starts_at).toISOString() || v.party !== old.party_size;
+  const tableChanged = Boolean(v.table) && v.table !== old.table_id;
+  if (timeOrPartyChanged || tableChanged) {
+    const moved = await changeReservationSlot(id, { startsAt, party: v.party, tableId: v.table || null });
+    if (!moved.ok) return { error: moved.error };
+  }
+  const email = v.email ? v.email.toLowerCase() : null;
+  const { error } = await createAdminClient().from("reservations").update({
+    guest_name: v.name,
+    email,
+    phone: v.phone ? (normalizePhone(v.phone, "CAD") ?? v.phone) : null,
+    notes: v.notes || null,
+  }).eq("id", id);
+  if (error) return { error: friendlyDbError(error) };
+
+  let emailed = false;
+  if (timeOrPartyChanged && email && v.notify === "on") {
+    bg(sendReservationChanged(restaurant, { guest_name: v.name, email, token: old.token }, { starts_at: old.starts_at, party_size: old.party_size }, { starts_at: startsAt, party_size: v.party }));
+    emailed = true;
+  }
+  // Moving a party or making it smaller can free a table that someone on the waitlist was hoping for.
+  if (timeOrPartyChanged || tableChanged) await flushWaitlist(restaurant);
+  refresh(slug);
+  return { message: emailed ? "Reservation updated and the guest was emailed" : "Reservation updated" };
 }
