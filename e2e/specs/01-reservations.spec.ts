@@ -61,6 +61,8 @@ test("a guest books a table, the owner sees it on the list and cancels it", asyn
   await owner.goto(`/o/${SLUG}?date=${tomorrow}`);
   await expect(owner.getByText("Gina Guest")).toBeVisible();
   await expect(owner.getByText("Table T1")).toBeVisible();
+  // the contact details the guest gave are on the row, as a link that opens their email app
+  await expect(owner.getByRole("link", { name: "delivered+gina@resend.dev" })).toHaveAttribute("href", "mailto:delivered+gina@resend.dev");
   owner.once("dialog", (d) => d.accept());
   await owner.getByRole("button", { name: "Cancel", exact: true }).click();
   await expect(owner.getByText("Cancelled", { exact: true })).toBeVisible();
@@ -137,5 +139,6 @@ test("the owner chooses which tables are online, adds a table, and adds a phone 
   await dlg.getByRole("button", { name: "Add reservation" }).click();
   await expect(owner.getByText("Phil Phone")).toBeVisible();
   await expect(owner.getByText("Added by host")).toBeVisible();
+  await expect(owner.getByText("No contact details saved")).toBeVisible();
   await ctx.close();
 });

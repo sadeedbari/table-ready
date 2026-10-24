@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Phone, StickyNote, Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, Mail, Phone, StickyNote, Users } from "lucide-react";
 import { getRestaurantContext } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { addDaysToKey, formatDate, formatTime, startOfDayInZone, todayKey } from "@/lib/format";
@@ -67,7 +67,11 @@ export default async function TodayPage(props: PageProps<"/o/[slug]">) {
                   <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[14px] text-label-2">
                     <span className="inline-flex items-center gap-1"><Users className="size-4" aria-hidden />{r.party_size}</span>
                     <span>{r.table_id ? `Table ${tableName.get(r.table_id) ?? "?"}` : "No table"}</span>
-                    {r.phone && <span className="inline-flex items-center gap-1"><Phone className="size-4" aria-hidden />{r.phone}</span>}
+                  </div>
+                  <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[14px] text-label-2">
+                    {r.phone && <a href={`tel:${r.phone.replace(/[^\d+]/g, "")}`} className="inline-flex min-h-8 items-center gap-1.5 underline-offset-2 hover:underline"><Phone className="size-4 shrink-0" aria-hidden />{r.phone}</a>}
+                    {r.email && <a href={`mailto:${r.email}`} className="inline-flex min-h-8 items-center gap-1.5 break-all underline-offset-2 hover:underline"><Mail className="size-4 shrink-0" aria-hidden />{r.email}</a>}
+                    {!r.phone && !r.email && <span className="text-label-3">No contact details saved</span>}
                   </div>
                   {r.notes && <p className="mt-1.5 inline-flex items-start gap-1.5 text-[14px] text-label-2"><StickyNote className="mt-0.5 size-4 shrink-0" aria-hidden />{r.notes}</p>}
                 </div>
