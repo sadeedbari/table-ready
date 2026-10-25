@@ -43,6 +43,10 @@ export default function Home() {
         <span className="py-2">© Sulo Systems</span>
         <Link href="/privacy" className="inline-flex min-h-11 items-center px-1 underline">Privacy</Link>
         <Link href="/terms" className="inline-flex min-h-11 items-center px-1 underline">Terms</Link>
+        <span className="py-2">
+          Designed and built by{" "}
+          <a href="https://sulosystems.com" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center px-1 font-medium underline">sulosystems.com</a>
+        </span>
       </footer>
     </main>
   );

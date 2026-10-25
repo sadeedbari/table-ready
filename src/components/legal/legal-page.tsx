@@ -22,6 +22,10 @@ export function LegalPage({ title, children }: { title: string; children: React.
       </main>
       <footer className="border-t border-separator py-8 text-center text-[13px] text-label-3">
         © {new Date().getFullYear()} {LEGAL.operator}. {LEGAL.product} is operated by {LEGAL.operator}.
+        <div className="mt-1">
+          Designed and built by{" "}
+          <a href="https://sulosystems.com" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center px-1 font-medium underline">sulosystems.com</a>
+        </div>
       </footer>
     </div>
   );
