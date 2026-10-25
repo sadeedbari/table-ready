@@ -67,7 +67,7 @@ export default async function QueueStatusPage(props: PageProps<"/queue/[token]">
         {live && <div className="mt-6"><LeaveButton token={token} /></div>}
         {r.phone && live && <p className="mt-4 text-[14px] text-label-2"><Phone className="mr-1 inline size-4" aria-hidden />Questions? <a className="underline" href={`tel:${r.phone}`}>{r.phone}</a></p>}
       </Card>
-      <p className="mt-6 text-center"><Logo className="text-[14px] opacity-60" /></p>
+      <p className="mt-6 text-center"><Logo className="text-[14px]" /></p>
     </main>
   );
 }

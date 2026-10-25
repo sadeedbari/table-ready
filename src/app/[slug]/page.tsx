@@ -112,7 +112,7 @@ export default async function ReservePage(props: PageProps<"/[slug]">) {
           <SignupForm slug={slug} restaurant={r.name} />
         </section>
       )}
-      <p className="mt-6 text-center text-[13px] text-label-3"><Link href="/" className="inline-flex min-h-11 items-center"><Logo className="text-[14px] opacity-70" /></Link></p>
+      <p className="mt-6 text-center text-[13px] text-label-3"><Link href="/" className="inline-flex min-h-11 items-center"><Logo className="text-[14px]" /></Link></p>
     </main>
   );
 }

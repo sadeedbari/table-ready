@@ -48,7 +48,7 @@ export default async function ReservationPage(props: PageProps<"/reservation/[to
         )}
         {res.status === "cancelled" && <p className="mt-6"><Link className="text-accent-text underline" href={`/${rest.slug}`}>Book another table</Link></p>}
       </Card>
-      <p className="mt-6 text-center"><Logo className="text-[14px] opacity-60" /></p>
+      <p className="mt-6 text-center"><Logo className="text-[14px]" /></p>
     </main>
   );
 }
