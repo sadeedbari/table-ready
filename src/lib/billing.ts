@@ -69,7 +69,7 @@ export async function createCheckoutUrl(restaurant: Pick<Restaurant, "id" | "nam
       cancel_url: `${back}?checkout=cancelled#plan`,
       allow_promotion_codes: true,
     },
-    { idempotencyKey: `tableready-checkout-${restaurant.id}-${bucket}` },
+    { idempotencyKey: `tableready-checkout-${restaurant.id}-${price}-${bucket}` },
   );
   if (!session.url) throw new BillingUserError("Stripe did not return a payment page. Please try again.");
   return session.url;
