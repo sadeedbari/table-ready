@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CalendarClock, ListChecks, Armchair } from "lucide-react";
 import { Logo } from "@/components/app/logo";
 import { buttonClass } from "@/components/ui/button-class";
+import { FREE_MONTHLY_LIMIT, PRO_PRICE_CAD, TRIAL_DAYS } from "@/lib/plan";
 
 const POINTS = [
   { icon: Armchair, title: "You choose what is online", body: "Add your tables and seat counts, then switch each one on or off for online guests. Keep the bar and the patio for walk-ins." },
@@ -38,6 +39,33 @@ export default function Home() {
             <p className="mt-2 text-[15px] text-label-2">{body}</p>
           </div>
         ))}
+      </section>
+      <section id="pricing" className="mt-20" aria-labelledby="pricing-heading">
+        <h2 id="pricing-heading" className="text-[32px] sm:text-[40px]">Simple pricing</h2>
+        <p className="mt-2 max-w-xl text-[16px] text-label-2">Start with {TRIAL_DAYS} days of Pro, no card needed. After that, stay on Free or keep Pro. Cancel any time.</p>
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          <div className="rounded-[20px] bg-surface p-6 shadow-sm hairline">
+            <h3 className="text-[22px]">Free</h3>
+            <p className="mt-1 text-[32px] font-semibold" style={{ fontFamily: "var(--font-display)" }}>$0</p>
+            <ul className="mt-4 space-y-2 text-[15px] text-label-2">
+              <li>{FREE_MONTHLY_LIMIT} reservations a month</li>
+              <li>Walk-in line, waitlist and alerts</li>
+              <li>Installable app for your staff</li>
+              <li>&ldquo;Powered by Table Ready&rdquo; on guest pages</li>
+            </ul>
+          </div>
+          <div className="rounded-[20px] bg-surface p-6 shadow-sm ring-2 ring-accent-fill">
+            <h3 className="text-[22px]">Pro</h3>
+            <p className="mt-1 text-[32px] font-semibold" style={{ fontFamily: "var(--font-display)" }}>${PRO_PRICE_CAD} <span className="text-[15px] font-normal text-label-2">CAD / month</span></p>
+            <ul className="mt-4 space-y-2 text-[15px] text-label-2">
+              <li>Unlimited reservations</li>
+              <li>Download your guest list (CSV)</li>
+              <li>No Table Ready branding on guest pages</li>
+              <li>Everything in Free</li>
+            </ul>
+          </div>
+        </div>
+        <div className="mt-6"><Link href="/signup" className={buttonClass("filled", "lg", true)}>Start your {TRIAL_DAYS}-day trial</Link></div>
       </section>
       <footer className="mt-20 flex flex-wrap items-center gap-x-4 text-[13px] text-label-2">
         <span className="py-2">© Sulo Systems</span>

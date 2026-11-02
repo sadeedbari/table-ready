@@ -3,12 +3,14 @@ import { getRestaurantContext } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { parseFilters, toCsv } from "@/lib/guest-list";
 import { loadGuestExport } from "@/lib/guest-query";
+import { currentPlan } from "@/lib/plan-server";
 
 /** The guest list (with the same filters as the page) as a CSV file. Owners and admins only: it holds guests' contact details. */
 export async function GET(request: NextRequest, ctx: RouteContext<"/o/[slug]/guests/export">) {
   const { slug } = await ctx.params;
   const { restaurant, isAdmin } = await getRestaurantContext(slug);
   if (!isAdmin) return new NextResponse("Only an owner or admin can download the guest list.", { status: 403 });
+  if ((await currentPlan(restaurant.id)).state.plan !== "pro") return new NextResponse("Downloading the guest list is part of Table Ready Pro.", { status: 402 });
   const filters = parseFilters(Object.fromEntries(new URL(request.url).searchParams));
   const rows = await loadGuestExport(await createClient(), restaurant.id, restaurant.timezone, filters);
   const stamp = new Date().toLocaleDateString("en-CA", { timeZone: restaurant.timezone });

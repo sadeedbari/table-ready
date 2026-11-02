@@ -8,6 +8,8 @@ import { env } from "@/lib/env";
 import { NoticeBanner } from "@/components/app/notice-banner";
 import { activeNotices } from "@/lib/notices-server";
 import { getRestaurantContext } from "@/lib/auth";
+import { PlanBanner } from "@/components/app/plan-banner";
+import { currentPlan, reservationsInMonth } from "@/lib/plan-server";
 import { DashNav } from "./nav";
 
 export const metadata = { robots: { index: false, follow: false } };
@@ -15,6 +17,8 @@ export const metadata = { robots: { index: false, follow: false } };
 export default async function DashboardLayout(props: LayoutProps<"/o/[slug]">) {
   const { slug } = await props.params;
   const { restaurant } = await getRestaurantContext(slug);
+  const { state: plan } = await currentPlan(restaurant.id);
+  const used = plan.plan === "free" ? await reservationsInMonth(restaurant) : 0;
   const showing = await activeNotices(restaurant.id, "reservations").then(async (a) => {
     const q = await activeNotices(restaurant.id, "queue");
     return [...a, ...q.filter((x) => !a.some((y) => y.id === x.id))];
@@ -37,6 +41,7 @@ export default async function DashboardLayout(props: LayoutProps<"/o/[slug]">) {
       </header>
       <main className="mx-auto max-w-5xl px-4 py-6 sm:py-8">
         <InstallBanner />
+        <PlanBanner slug={slug} state={plan} used={used} timeZone={restaurant.timezone} />
         {showing.length > 0 && (
           <div className="mb-4">
             <NoticeBanner notices={showing} timeZone={restaurant.timezone} staff />

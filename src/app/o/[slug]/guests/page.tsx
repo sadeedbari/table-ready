@@ -4,6 +4,7 @@ import { getRestaurantContext } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate, formatTime } from "@/lib/format";
 import { MODES, OUTCOMES, PAGE_SIZE, filterQuery, modeLabel, parseFilters } from "@/lib/guest-list";
+import { currentPlan } from "@/lib/plan-server";
 import { guestCounts, loadGuestPage } from "@/lib/guest-query";
 import { buttonClass } from "@/components/ui/button-class";
 import { Badge, Card, EmptyState, PageHeader } from "@/components/ui/misc";
@@ -14,6 +15,7 @@ export const metadata = { title: "Guests" };
 export default async function GuestsPage(props: PageProps<"/o/[slug]/guests">) {
   const { slug } = await props.params;
   const { restaurant, isAdmin } = await getRestaurantContext(slug);
+  const isPro = (await currentPlan(restaurant.id)).state.plan === "pro";
   const filters = parseFilters(await props.searchParams);
   const supabase = await createClient();
   const [{ rows, total }, counts] = await Promise.all([
@@ -30,7 +32,9 @@ export default async function GuestsPage(props: PageProps<"/o/[slug]/guests">) {
       <PageHeader
         title="Guests"
         subtitle="Everyone who reached you by reservation, the waitlist, the walk-in line, or by signing up for updates: when they came in, how, and what happened."
-        actions={isAdmin ? <a href={`/o/${slug}/guests/export${filterQuery(filters)}`} className={buttonClass("tinted", "md")}><Download className="size-4" aria-hidden />Download CSV</a> : undefined}
+        actions={isAdmin ? (isPro
+          ? <a href={`/o/${slug}/guests/export${filterQuery(filters)}`} className={buttonClass("tinted", "md")}><Download className="size-4" aria-hidden />Download CSV</a>
+          : <Link href={`/o/${slug}/settings#plan`} className={buttonClass("tinted", "md")}><Download className="size-4" aria-hidden />Download CSV · Pro</Link>) : undefined}
       />
 
       <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">

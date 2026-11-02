@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/misc";
 import { Logo } from "@/components/app/logo";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { minutesLeft, partiesAhead } from "@/lib/queue";
+import { currentPlan } from "@/lib/plan-server";
 import { activeNotices } from "@/lib/notices-server";
 import { NoticeBanner } from "@/components/app/notice-banner";
 import { LeaveButton, StatusPoller } from "./status-client";
@@ -28,6 +29,7 @@ export default async function QueueStatusPage(props: PageProps<"/queue/[token]">
   const { data: rest } = await db.from("restaurants").select("*").eq("id", w.restaurant_id).single();
   if (!rest) notFound();
   const r = rest as Restaurant;
+  const showBranding = (await currentPlan(r.id)).state.plan !== "pro";
   const { data: open } = await db.from("walkins").select("id, status, joined_at").eq("restaurant_id", r.id).in("status", ["waiting", "ready"]);
   const { ahead, left } = standing(w, open ?? []);
   const live = w.status === "waiting" || w.status === "ready";
@@ -67,7 +69,7 @@ export default async function QueueStatusPage(props: PageProps<"/queue/[token]">
         {live && <div className="mt-6"><LeaveButton token={token} /></div>}
         {r.phone && live && <p className="mt-4 text-[14px] text-label-2"><Phone className="mr-1 inline size-4" aria-hidden />Questions? <a className="underline" href={`tel:${r.phone}`}>{r.phone}</a></p>}
       </Card>
-      <p className="mt-6 text-center"><Logo className="text-[14px]" /></p>
+      {showBranding && <p className="mt-6 text-center"><Logo className="text-[14px]" /></p>}
     </main>
   );
 }

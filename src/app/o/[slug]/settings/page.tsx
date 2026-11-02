@@ -9,6 +9,9 @@ import { NotificationSettings } from "./notification-settings";
 import { NoticesSection, type NoticeRow } from "./notices-section";
 import type { GuestNotice } from "@/lib/types";
 import { ProfileForm } from "./profile-form";
+import { PlanSection } from "./plan-section";
+import { billingReady, confirmCheckout } from "@/lib/billing";
+import { currentPlan, reservationsInMonth } from "@/lib/plan-server";
 
 export const metadata = { title: "Settings" };
 
@@ -22,8 +25,15 @@ async function loadNotices(restaurantId: string): Promise<NoticeRow[]> {
 
 export default async function SettingsPage(props: PageProps<"/o/[slug]/settings">) {
   const { slug } = await props.params;
-  const { restaurant, isAdmin, me } = await getRestaurantContext(slug);
+  const { restaurant, isAdmin, isOwner, me } = await getRestaurantContext(slug);
+  const sp = await props.searchParams;
+  const sessionId = typeof sp.session_id === "string" ? sp.session_id : null;
+  const checkoutParam = sp.checkout === "success" || sp.checkout === "cancelled" ? sp.checkout : undefined;
+  // Coming back from Stripe: record the new plan now rather than waiting for the webhook.
+  if (checkoutParam === "success" && sessionId && isOwner) await confirmCheckout(restaurant.id, sessionId).catch(() => false);
   const notices = await loadNotices(restaurant.id);
+  const { state: plan, record } = await currentPlan(restaurant.id);
+  const used = await reservationsInMonth(restaurant);
   const link = `${env.appUrl.includes("localhost") ? env.appUrl : "https://tableready.sulosystems.com"}/${slug}`;
   return (
     <>
@@ -33,6 +43,7 @@ export default async function SettingsPage(props: PageProps<"/o/[slug]/settings"
         <p className="mt-1 text-[14px] text-label-2">Share this on your website, Instagram and Google Business Profile.</p>
         <p className="mt-3 rounded-[12px] bg-surface-2 px-3.5 py-2.5 font-mono text-[14px] break-all select-all">{link}</p>
       </Card>
+      <PlanSection slug={slug} state={plan} used={used} isOwner={isOwner} timeZone={restaurant.timezone} hasSubscription={Boolean(record?.stripe_subscription_id)} checkout={checkoutParam} billingReady={billingReady()} />
       <div className="mb-8"><NoticesSection slug={slug} timeZone={restaurant.timezone} notices={notices} /></div>
       <h2 className="mb-2 text-[20px]">Notifications</h2>
       <div className="mb-3"><PushDeviceCard vapidKey={env.vapidPublicKey ?? ""} teamEnabled={restaurant.notify_push} /></div>

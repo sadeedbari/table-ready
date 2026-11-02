@@ -4,11 +4,11 @@ import { env, features } from "@/lib/env";
 import { formatDate, formatTime } from "@/lib/format";
 import type { Reservation, Restaurant, WaitlistEntry, Walkin } from "@/lib/types";
 
-function esc(s: string) {
+export function esc(s: string) {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 }
 
-function shell(title: string, body: string, button?: { href: string; label: string }) {
+export function shell(title: string, body: string, button?: { href: string; label: string }) {
   return `<div style="font-family:Georgia,'Times New Roman',serif;background:#faf6f0;padding:32px 16px"><div style="max-width:480px;margin:0 auto;background:#ffffff;border-radius:16px;padding:32px 28px;color:#2a211c"><h1 style="font-size:24px;margin:0 0 12px">${esc(title)}</h1><div style="font-family:-apple-system,Segoe UI,Inter,sans-serif;font-size:15px;line-height:1.55;color:#5a4a3f">${body}</div>${button ? `<a href="${button.href}" style="display:inline-block;margin-top:20px;background:#b4491f;color:#ffffff;text-decoration:none;font-family:-apple-system,Segoe UI,sans-serif;font-weight:600;padding:12px 22px;border-radius:999px">${esc(button.label)}</a>` : ""}</div><p style="text-align:center;font-family:-apple-system,Segoe UI,sans-serif;font-size:12px;color:#8a7a6e;margin-top:16px">Sent by Table Ready on behalf of the restaurant.</p></div>`;
 }
 

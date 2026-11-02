@@ -6,6 +6,7 @@ import { Badge, Card, statusTone } from "@/components/ui/misc";
 import { Logo } from "@/components/app/logo";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatDate, formatTime, STATUS_LABEL } from "@/lib/format";
+import { currentPlan } from "@/lib/plan-server";
 import { CancelButton } from "./cancel-button";
 import type { Reservation, Restaurant } from "@/lib/types";
 
@@ -29,6 +30,7 @@ export default async function ReservationPage(props: PageProps<"/reservation/[to
   const res = reservation as Reservation;
   const rest = r as Restaurant;
   const { canCancel, past } = timing(res, rest);
+  const showBranding = (await currentPlan(rest.id)).state.plan !== "pro";
 
   return (
     <main className="mx-auto max-w-md px-4 py-12">
@@ -48,7 +50,7 @@ export default async function ReservationPage(props: PageProps<"/reservation/[to
         )}
         {res.status === "cancelled" && <p className="mt-6"><Link className="text-accent-text underline" href={`/${rest.slug}`}>Book another table</Link></p>}
       </Card>
-      <p className="mt-6 text-center"><Logo className="text-[14px]" /></p>
+      {showBranding && <p className="mt-6 text-center"><Logo className="text-[14px]" /></p>}
     </main>
   );
 }

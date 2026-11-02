@@ -3,6 +3,7 @@ import { env } from "@/lib/env";
 import { bearerMatches } from "@/lib/secure-compare";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendReminder } from "@/lib/emails";
+import { sendPlanEmail } from "@/lib/billing";
 import { expireWaitlist, flushWaitlist } from "@/lib/reservations";
 import type { Restaurant } from "@/lib/types";
 
@@ -38,5 +39,19 @@ export async function GET(request: NextRequest) {
     await expireWaitlist(r);
     await flushWaitlist(r);
   }
-  return NextResponse.json({ reminded });
+  // Trials ending within 3 days: one email to the owners, claimed first so it is sent once.
+  let trialNotices = 0;
+  const { data: ending } = await db
+    .from("restaurant_plans")
+    .select("restaurant_id")
+    .eq("status", "none")
+    .is("trial_reminder_sent_at", null)
+    .gt("trial_ends_at", new Date(now).toISOString())
+    .lte("trial_ends_at", new Date(now + 3 * 86_400_000).toISOString());
+  for (const p of ending ?? []) {
+    const { data: claimed } = await db.from("restaurant_plans").update({ trial_reminder_sent_at: new Date().toISOString() }).eq("restaurant_id", p.restaurant_id).is("trial_reminder_sent_at", null).select("restaurant_id");
+    if (!claimed?.length) continue;
+    if (await sendPlanEmail(p.restaurant_id, "trial_ending")) trialNotices++;
+  }
+  return NextResponse.json({ reminded, trialNotices });
 }

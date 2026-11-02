@@ -5,6 +5,8 @@ import { addDaysToKey, dayKey, startOfDayInZone, todayKey } from "@/lib/format";
 import { availableSlots, toMinutes } from "@/lib/hours";
 import { sendCancellation, sendConfirmation, sendWaitlistOpening } from "@/lib/emails";
 import { notifyStaff, reservationMessage } from "@/lib/notify-staff";
+import { currentPlan, reservationsInMonth } from "@/lib/plan-server";
+import { usageLevel } from "@/lib/plan";
 import type { Closure, DiningTable, Reservation, Restaurant, ServicePeriod, WaitlistEntry } from "@/lib/types";
 
 export interface RestaurantData {
@@ -70,6 +72,12 @@ export async function bookTable(
   r: Restaurant,
   input: { name: string; email?: string; phone?: string; party: number; startsAt: string; notes?: string; source: "online" | "host"; tableId?: string | null; marketing?: boolean },
 ): Promise<BookResult> {
+  if (input.source === "online") {
+    const { state } = await currentPlan(r.id);
+    if (state.plan === "free" && usageLevel("free", await reservationsInMonth(r, dayKey(input.startsAt, r.timezone))) === "stopped") {
+      return { ok: false, error: `${r.name} is not taking more online reservations for that month. Please call${r.phone ? ` ${r.phone}` : " the restaurant"} to book.` };
+    }
+  }
   const { data, error } = await createAdminClient().rpc("book_table", {
     p_restaurant: r.id,
     p_name: input.name,

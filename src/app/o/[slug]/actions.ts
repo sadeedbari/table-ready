@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { friendlyDbError } from "@/lib/db-errors";
 import { instantAt, toMinutes } from "@/lib/hours";
 import { parseLocalInput } from "@/lib/notices";
+import { BillingUserError, createCheckoutUrl, createPortalUrl } from "@/lib/billing";
 import { bookTable, cancelReservation, changeReservationSlot, flushWaitlist } from "@/lib/reservations";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendReservationChanged, sendWalkinJoined, sendWalkinReady } from "@/lib/emails";
@@ -391,4 +392,40 @@ export async function editReservation(slug: string, id: string, fd: FormData): P
   if (timeOrPartyChanged || tableChanged) await flushWaitlist(restaurant);
   refresh(slug);
   return { message: emailed ? "Reservation updated and the guest was emailed" : "Reservation updated" };
+}
+
+// ─────────────── Plan and billing (owner only) ───────────────
+
+const NOT_OWNER: ActionResult = { error: "Only the restaurant's owner can change the plan." };
+const BILLING_FAILED: ActionResult = { error: "Something went wrong with billing. Please try again in a moment." };
+
+async function ownerEmail(): Promise<string | undefined> {
+  const { data } = await (await createClient()).auth.getUser();
+  return data.user?.email ?? undefined;
+}
+
+/** Sends the owner to Stripe to subscribe to Pro. The card is entered on Stripe's page, never on ours. */
+export async function startCheckout(slug: string): Promise<ActionResult> {
+  const { restaurant, isOwner } = await getRestaurantContext(slug);
+  if (!isOwner) return NOT_OWNER;
+  try {
+    return { redirect: await createCheckoutUrl(restaurant, await ownerEmail()) };
+  } catch (e) {
+    if (e instanceof BillingUserError) return { error: e.message };
+    console.error("[billing] checkout failed:", (e as Error).message);
+    return BILLING_FAILED;
+  }
+}
+
+/** Sends the owner to Stripe's Customer Portal: update the card, see invoices, cancel. */
+export async function openBillingPortal(slug: string): Promise<ActionResult> {
+  const { restaurant, isOwner } = await getRestaurantContext(slug);
+  if (!isOwner) return NOT_OWNER;
+  try {
+    return { redirect: await createPortalUrl(restaurant, await ownerEmail()) };
+  } catch (e) {
+    if (e instanceof BillingUserError) return { error: e.message };
+    console.error("[billing] portal failed:", (e as Error).message);
+    return BILLING_FAILED;
+  }
 }

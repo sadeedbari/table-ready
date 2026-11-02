@@ -52,7 +52,10 @@ export function ActionForm({
             setError(null);
             if (r && r.message) toast(r.message);
             if (resetOnSuccess) form.reset();
-            if (r && r.redirect) router.push(r.redirect);
+            if (r && r.redirect) {
+              if (/^https?:\/\//.test(r.redirect)) window.location.assign(r.redirect); // off to Stripe
+              else router.push(r.redirect);
+            }
             onDone?.();
           }),
         )(e);

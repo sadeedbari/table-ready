@@ -10,6 +10,7 @@ import { loadRestaurantData, slotsFor } from "@/lib/reservations";
 import { activeNotices } from "@/lib/notices-server";
 import { NoticeBanner } from "@/components/app/notice-banner";
 import { SITE_NAME } from "@/lib/site";
+import { currentPlan, onlineBookingPaused } from "@/lib/plan-server";
 import { DetailsForm, Picker, SignupForm, WaitlistForm } from "./reserve-client";
 
 export async function generateMetadata(props: PageProps<"/[slug]">): Promise<Metadata> {
@@ -39,7 +40,9 @@ export default async function ReservePage(props: PageProps<"/[slug]">) {
   const party = Math.min(Math.max(parseInt(one("party") ?? "2", 10) || 2, 1), r.max_party_size);
   const requested = one("date");
   const date = requested && days.includes(requested) ? requested : days[0];
-  const slots = r.online_enabled && date ? await slotsFor(data, date, party) : [];
+  const paused = r.online_enabled && date ? await onlineBookingPaused(r, date) : false;
+  const showBranding = (await currentPlan(r.id)).state.plan !== "pro";
+  const slots = r.online_enabled && !paused && date ? await slotsFor(data, date, party) : [];
   const chosen = slots.find((s) => s.startsAt === one("time"));
   const dayLabel = (key: string, long = false) => formatDate(`${key}T12:00:00Z`, "UTC", long ? { weekday: "long", month: "long", day: "numeric" } : { weekday: "short", month: "short", day: "numeric" });
   const today = todayKey(r.timezone);
@@ -65,6 +68,11 @@ export default async function ReservePage(props: PageProps<"/[slug]">) {
         {!r.online_enabled ? (
           <div className="py-6 text-center">
             <h2 className="text-[22px]">Online reservations are paused</h2>
+            <p className="mt-2 text-[15px] text-label-2">{r.phone ? <>Please call us on <a className="underline" href={`tel:${r.phone}`}>{r.phone}</a> to book a table.</> : "Please contact the restaurant to book a table."}</p>
+          </div>
+        ) : paused ? (
+          <div className="py-6 text-center" data-testid="booking-paused">
+            <h2 className="text-[22px]">Online booking is full for this month</h2>
             <p className="mt-2 text-[15px] text-label-2">{r.phone ? <>Please call us on <a className="underline" href={`tel:${r.phone}`}>{r.phone}</a> to book a table.</> : "Please contact the restaurant to book a table."}</p>
           </div>
         ) : days.length === 0 ? (
@@ -105,14 +113,14 @@ export default async function ReservePage(props: PageProps<"/[slug]">) {
           </>
         )}
       </section>
-      {r.online_enabled && !chosen && (
+      {r.online_enabled && !chosen && !paused && (
         <section className="mt-6 rounded-[24px] bg-surface p-5 shadow-sm hairline sm:p-6" aria-labelledby="updates-heading">
           <h2 id="updates-heading" className="text-[19px]">Get offers and news</h2>
           <p className="mt-1 mb-4 text-[14px] text-label-2">Not booking right now? Leave your email and {r.name} will keep in touch.</p>
           <SignupForm slug={slug} restaurant={r.name} />
         </section>
       )}
-      <p className="mt-6 text-center text-[13px] text-label-3"><Link href="/" className="inline-flex min-h-11 items-center"><Logo className="text-[14px]" /></Link></p>
+      {showBranding && <p className="mt-6 text-center text-[13px] text-label-3"><Link href="/" className="inline-flex min-h-11 items-center"><Logo className="text-[14px]" /></Link></p>}
     </main>
   );
 }
