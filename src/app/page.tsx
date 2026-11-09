@@ -33,7 +33,7 @@ export default function Home() {
           <Link href="/signup" className={buttonClass("filled", "md", true)}>Get started</Link>
         </nav>
       </header>
-      <section className="pt-14 pb-16 sm:pt-24">
+      <section className="pt-14 pb-10 sm:pt-24">
         <h1 className="max-w-3xl text-[40px] leading-[1.05] sm:text-[64px]">Fill every table, without the phone tag.</h1>
         <p className="mt-6 max-w-xl text-[18px] text-label-2">
           Table Ready gives your restaurant an online reservation page and a waitlist. Set how many tables and seats are open to
@@ -43,6 +43,20 @@ export default function Home() {
         <div className="mt-8 flex flex-wrap gap-3">
           <Link href="/signup" className={buttonClass("filled", "lg", true)}>Start free for {TRIAL_DAYS} days</Link>
           <Link href="/login" className={buttonClass("gray", "lg", true)}>Sign in</Link>
+        </div>
+      </section>
+      <section className="pb-16" aria-labelledby="video-heading">
+        <h2 id="video-heading" className="mb-4 text-[22px] sm:text-[26px]">See how Table Ready works</h2>
+        <div className="aspect-video overflow-hidden rounded-[24px] bg-surface shadow-md hairline">
+          <iframe
+            className="size-full"
+            src="https://www.youtube-nocookie.com/embed/KJEX0dcbVbw?rel=0"
+            title="Table Ready: how it works"
+            loading="lazy"
+            allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+            referrerPolicy="strict-origin-when-cross-origin"
+            allowFullScreen
+          />
         </div>
       </section>
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
